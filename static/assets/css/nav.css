@@ -9,6 +9,8 @@
 .f-nav #icon-container {
    display: flex;
    align-items: center;
+   padding-left: 4px;
+   min-height: 100%;
 }
 
 img {
@@ -30,7 +32,7 @@ img {
    left: 0;
    right: 0;
    min-height: 10vh;
-   padding: 0 25px;
+   padding: 0 25px 0 34px;
    box-sizing: border-box;
    background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
    box-shadow:
@@ -50,11 +52,11 @@ img {
 .f-nav .icon.brand-wordmark {
    position: absolute;
    float: left;
-   left: 0;
+   left: 14px;
    top: 50%;
    transform: translateY(-50%);
    margin-left: 0;
-   padding: 0.15rem 0;
+   padding: 0.15rem 0.35rem 0.15rem 0;
    height: auto;
    text-transform: none;
    font-size: clamp(1.1rem, 2.4vw, 1.45rem);
