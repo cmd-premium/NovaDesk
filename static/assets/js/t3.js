@@ -35,13 +35,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         const formValue = input.value.trim();
         const searchBase = getSearchUrl();
         const url = isUrl(formValue) ? prependHttps(formValue) : `${searchBase}${formValue}`;
-        sessionStorage.setItem("GoUrl", __uv$config.encodeUrl(url));
+        const enc = __uv$config.encodeUrl(url);
+        sessionStorage.setItem("GoUrl", enc);
+        sessionStorage.setItem("GoUrlHint", url);
         const iframeContainer = document.getElementById("frame-container");
         const activeIframe = Array.from(iframeContainer?.querySelectorAll("iframe") || []).find(iframe => iframe.classList.contains("active"));
         if (!activeIframe) {
           return;
         }
-        activeIframe.src = `/a/${__uv$config.encodeUrl(url)}`;
+        let xprime = false;
+        try {
+          xprime = /(^|\.)xprime\.su$/i.test(new URL(url).hostname);
+        } catch {
+          xprime = /xprime\.su/i.test(url);
+        }
+        const dyn = localStorage.getItem("dy") === "true" || xprime;
+        activeIframe.src = dyn ? `/a/q/${enc}` : `/a/${enc}`;
         activeIframe.dataset.tabUrl = url;
         input.value = url;
       });
@@ -71,7 +80,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       pendingInitialGoUrl = false;
       const goUrl = sessionStorage.getItem("GoUrl");
       if (goUrl !== null) {
-        newSrc = goUrl.includes("/e/") ? `${window.location.origin}${goUrl}` : `${window.location.origin}/a/${goUrl}`;
+        if (goUrl.includes("/e/")) {
+          newSrc = `${window.location.origin}${goUrl}`;
+        } else {
+          const hint = sessionStorage.getItem("GoUrlHint") || "";
+          let xprime = false;
+          try {
+            xprime = /(^|\.)xprime\.su$/i.test(new URL(hint).hostname);
+          } catch {
+            xprime = /xprime\.su/i.test(hint);
+          }
+          const dyn = localStorage.getItem("dy") === "true" || xprime;
+          newSrc = `${window.location.origin}/${dyn ? "a/q" : "a"}/${goUrl}`;
+        }
       }
     } else {
       const popupUrl = sessionStorage.getItem("URL");
@@ -138,7 +159,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       try {
         if (newIframe.contentWindow) {
           newIframe.contentWindow.open = url => {
-            sessionStorage.setItem("URL", `/a/${__uv$config.encodeUrl(url)}`);
+            const u = typeof url === "string" ? url : "";
+            const enc = __uv$config.encodeUrl(u);
+            let xprime = false;
+            try {
+              xprime = /(^|\.)xprime\.su$/i.test(new URL(u).hostname);
+            } catch {
+              xprime = /xprime\.su/i.test(u);
+            }
+            const dyn = localStorage.getItem("dy") === "true" || xprime;
+            sessionStorage.setItem("URL", `${dyn ? "/a/q/" : "/a/"}${enc}`);
+            if (u) {
+              sessionStorage.setItem("GoUrlHint", u);
+            }
             createNewTab();
             return null;
           };

@@ -69,15 +69,25 @@ async function processUrl(value, path) {
     url = `https://${url}`;
   }
 
-  sessionStorage.setItem("GoUrl", __uv$config.encodeUrl(url));
-  const dy = localStorage.getItem("dy");
+  const enc = __uv$config.encodeUrl(url);
+  sessionStorage.setItem("GoUrl", enc);
+  sessionStorage.setItem("GoUrlHint", url);
+  const dyOn = localStorage.getItem("dy") === "true";
+  let xprime = false;
+  try {
+    xprime = /(^|\.)xprime\.su$/i.test(new URL(url).hostname);
+  } catch {
+    xprime = /xprime\.su/i.test(url);
+  }
 
-  if (dy === "true") {
-    window.location.href = `/a/q/${__uv$config.encodeUrl(url)}`;
-  } else if (path) {
+  if (dyOn || xprime) {
+    window.location.href = `/a/q/${enc}`;
+    return;
+  }
+  if (path) {
     location.href = path;
   } else {
-    window.location.href = `/a/${__uv$config.encodeUrl(url)}`;
+    window.location.href = `/a/${enc}`;
   }
 }
 
