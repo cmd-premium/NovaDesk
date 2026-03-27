@@ -1,36 +1,57 @@
-// index.js
+// index.js — home search / navigation
 window.addEventListener("load", () => {
   navigator.serviceWorker.register("../sw.js?v=2025-04-15", {
     scope: "/a/",
   });
 });
 
-let xl;
+function isInIframe() {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+}
 
+/** True when the top window is the tab shell (/d). */
+let tabsShellIsTop;
 try {
-  xl = window.top.location.pathname === "/d";
+  tabsShellIsTop = window.top.location.pathname === "/d";
 } catch {
   try {
-    xl = window.parent.location.pathname === "/d";
+    tabsShellIsTop = window.parent.location.pathname === "/d";
   } catch {
-    xl = false;
+    tabsShellIsTop = false;
   }
+}
+
+/**
+ * When the home page runs inside the tab UI (iframe) or any iframe, we must not
+ * navigate to /d — that loads another tab shell inside the iframe.
+ * Use UV routes only (empty path → /a/... in processUrl).
+ */
+function preferOpenInProxyOnly() {
+  return isInIframe() || tabsShellIsTop;
 }
 
 const form = document.getElementById("fv");
 const input = document.getElementById("input");
 
 if (form && input) {
-  form.addEventListener("submit", async event => {
+  form.addEventListener("submit", event => {
     event.preventDefault();
     try {
-      if (xl) processUrl(input.value, "");
-      else processUrl(input.value, "/d");
+      if (preferOpenInProxyOnly()) {
+        processUrl(input.value, "");
+      } else {
+        processUrl(input.value, "/d");
+      }
     } catch {
-      processUrl(input.value, "/d");
+      processUrl(input.value, preferOpenInProxyOnly() ? "" : "/d");
     }
   });
 }
+
 function processUrl(value, path) {
   let url = value.trim();
   const engine = localStorage.getItem("engine");
@@ -55,7 +76,7 @@ function processUrl(value, path) {
 }
 
 function go(value) {
-  processUrl(value, "/d");
+  processUrl(value, preferOpenInProxyOnly() ? "" : "/d");
 }
 
 function blank(value) {
