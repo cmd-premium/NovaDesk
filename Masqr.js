@@ -36,6 +36,11 @@ export function setupMasqr(app) {
     const pass = auth[1]
 
     try {
+      if (!LICENSE_SERVER_URL) {
+        console.error("Masqr: set MASQR_LICENSE_URL in the environment.")
+        MasqFail(req, res)
+        return
+      }
       const licenseCheckResponse = await fetch(
         LICENSE_SERVER_URL + pass + "&host=" + req.headers.host
       )

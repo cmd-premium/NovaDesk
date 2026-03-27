@@ -3,7 +3,6 @@ name: Bug Report
 about: Create a report to help us improve
 title: "[Bug] "
 labels: Bug Report
-assignees: xbubbo
 ---
 
 **Describe the bug**

@@ -1,6 +1,6 @@
-# Contributing Guidelines
+# Contributing to NovaDesk
 
-Thank you for your interest in contributing to this repository! To ensure a smooth collaboration, please review the following guidelines:
+Thank you for your interest in contributing to **NovaDesk**. Please review the following guidelines:
 
 ## Pull Request Process
 
