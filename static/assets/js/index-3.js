@@ -1,9 +1,14 @@
 // index.js — home search / navigation
-window.addEventListener("load", () => {
-  navigator.serviceWorker.register("../sw.js?v=2025-04-15", {
-    scope: "/a/",
-  });
-});
+const UV_SW_URL = "../sw.js?v=2025-04-15";
+const UV_SW_SCOPE = { scope: "/a/" };
+
+let uvSwReady = Promise.resolve();
+if ("serviceWorker" in navigator) {
+  uvSwReady = navigator.serviceWorker
+    .register(UV_SW_URL, UV_SW_SCOPE)
+    .then(() => navigator.serviceWorker.ready)
+    .catch(() => {});
+}
 
 function isInIframe() {
   try {
@@ -40,19 +45,23 @@ const input = document.getElementById("input");
 if (form && input) {
   form.addEventListener("submit", event => {
     event.preventDefault();
-    try {
-      if (preferOpenInProxyOnly()) {
-        processUrl(input.value, "");
-      } else {
-        processUrl(input.value, "/d");
+    void (async () => {
+      try {
+        if (preferOpenInProxyOnly()) {
+          await processUrl(input.value, "");
+        } else {
+          await processUrl(input.value, "/d");
+        }
+      } catch {
+        await processUrl(input.value, preferOpenInProxyOnly() ? "" : "/d");
       }
-    } catch {
-      processUrl(input.value, preferOpenInProxyOnly() ? "" : "/d");
-    }
+    })();
   });
 }
 
-function processUrl(value, path) {
+async function processUrl(value, path) {
+  await uvSwReady;
+
   let url = value.trim();
   const engine = localStorage.getItem("engine");
   const searchUrl = engine ? engine : "https://search.brave.com/search?q=";
@@ -76,15 +85,15 @@ function processUrl(value, path) {
 }
 
 function go(value) {
-  processUrl(value, preferOpenInProxyOnly() ? "" : "/d");
+  void processUrl(value, preferOpenInProxyOnly() ? "" : "/d");
 }
 
 function blank(value) {
-  processUrl(value);
+  void processUrl(value);
 }
 
 function dy(value) {
-  processUrl(value, `/a/q/${__uv$config.encodeUrl(value)}`);
+  void processUrl(value, `/a/q/${__uv$config.encodeUrl(value)}`);
 }
 
 function isUrl(val = "") {

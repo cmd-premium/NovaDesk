@@ -3,51 +3,53 @@ function getSearchUrl() {
   return localStorage.getItem("engine") || "https://search.brave.com/search?q=";
 }
 
-window.addEventListener("load", () => {
-  navigator.serviceWorker.register("../sw.js?v=2025-04-15", { scope: "/a/" });
+let uvSwReady = Promise.resolve();
+if ("serviceWorker" in navigator) {
+  uvSwReady = navigator.serviceWorker
+    .register("../sw.js?v=2025-04-15", { scope: "/a/" })
+    .then(() => navigator.serviceWorker.ready)
+    .catch(() => {});
+}
+
+function isUrl(val = "") {
+  if (/^http(s?):\/\//.test(val) || (val.includes(".") && val.substr(0, 1) !== " ")) {
+    return true;
+  }
+  return false;
+}
+
+function prependHttps(url) {
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    return `https://${url}`;
+  }
+  return url;
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await uvSwReady;
+
   const form = document.getElementById("fv");
   const input = document.getElementById("input");
   if (form && input) {
     form.addEventListener("submit", event => {
       event.preventDefault();
-      const formValue = input.value.trim();
-      const searchBase = getSearchUrl();
-      const url = isUrl(formValue) ? prependHttps(formValue) : `${searchBase}${formValue}`;
-      processUrl(url);
+      void uvSwReady.then(() => {
+        const formValue = input.value.trim();
+        const searchBase = getSearchUrl();
+        const url = isUrl(formValue) ? prependHttps(formValue) : `${searchBase}${formValue}`;
+        sessionStorage.setItem("GoUrl", __uv$config.encodeUrl(url));
+        const iframeContainer = document.getElementById("frame-container");
+        const activeIframe = Array.from(iframeContainer?.querySelectorAll("iframe") || []).find(iframe => iframe.classList.contains("active"));
+        if (!activeIframe) {
+          return;
+        }
+        activeIframe.src = `/a/${__uv$config.encodeUrl(url)}`;
+        activeIframe.dataset.tabUrl = url;
+        input.value = url;
+      });
     });
   }
 
-  function processUrl(url) {
-    sessionStorage.setItem("GoUrl", __uv$config.encodeUrl(url));
-    const iframeContainer = document.getElementById("frame-container");
-    const activeIframe = Array.from(iframeContainer.querySelectorAll("iframe")).find(iframe =>
-      iframe.classList.contains("active"),
-    );
-    if (!activeIframe) {
-      return;
-    }
-    activeIframe.src = `/a/${__uv$config.encodeUrl(url)}`;
-    activeIframe.dataset.tabUrl = url;
-    input.value = url;
-  }
-
-  function isUrl(val = "") {
-    if (/^http(s?):\/\//.test(val) || (val.includes(".") && val.substr(0, 1) !== " ")) {
-      return true;
-    }
-    return false;
-  }
-
-  function prependHttps(url) {
-    if (!url.startsWith("http://") && !url.startsWith("https://")) {
-      return `https://${url}`;
-    }
-    return url;
-  }
-
-});
-
-document.addEventListener("DOMContentLoaded", () => {
   const addTabButton = document.getElementById("add-tab");
   const tabList = document.getElementById("tab-list");
   const iframeContainer = document.getElementById("frame-container");
@@ -85,8 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
     newTab.setAttribute("role", "tab");
     const tabTitle = document.createElement("span");
     const newIframe = document.createElement("iframe");
-    newIframe.sandbox =
-      "allow-same-origin allow-scripts allow-forms allow-pointer-lock allow-modals allow-orientation-lock allow-presentation allow-storage-access-by-user-activation";
+    newIframe.sandbox = "allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-pointer-lock allow-modals allow-orientation-lock allow-presentation allow-storage-access-by-user-activation";
 
     tabTitle.textContent = `New Tab ${tabCounter}`;
     tabTitle.className = "t";
@@ -198,9 +199,7 @@ document.addEventListener("DOMContentLoaded", () => {
         iframe.classList.remove("active");
       }
       remainingTabs[nextTabIndex].classList.add("active");
-      const nextIframe = iframeContainer.querySelector(
-        `iframe[data-tab-id="${remainingTabs[nextTabIndex].dataset.tabId}"]`,
-      );
+      const nextIframe = iframeContainer.querySelector(`iframe[data-tab-id="${remainingTabs[nextTabIndex].dataset.tabId}"]`);
       if (nextIframe) {
         nextIframe.classList.add("active");
       }
