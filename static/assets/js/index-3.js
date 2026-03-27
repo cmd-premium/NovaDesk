@@ -28,12 +28,13 @@ try {
 }
 
 /**
- * When the home page runs inside the tab UI (iframe) or any iframe, we must not
- * navigate to /d — that loads another tab shell inside the iframe.
- * Use UV routes only (empty path → /a/... in processUrl).
+ * When the home page runs inside the tab shell’s iframe (top is /d), do not send /d again —
+ * that would nest a second tab UI. Use proxy routes only (empty path in processUrl).
+ * Note: use AND, not OR — if we only check isInIframe(), portal/LMS wrappers skip /d and
+ * searches open full-page /a/ instead of the tab system.
  */
 function preferOpenInProxyOnly() {
-  return isInIframe() || tabsShellIsTop;
+  return isInIframe() && tabsShellIsTop;
 }
 
 const form = document.getElementById("fv");
