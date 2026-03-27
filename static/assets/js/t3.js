@@ -23,6 +23,26 @@ function prependHttps(url) {
   return url;
 }
 
+/** SPAs often read viewport size once; iframes get final width after layout. Nudge resize so sites recalc (fixes “zoomed”/wrong scale). */
+function requestIframeLayoutFix(contentWindow) {
+  if (!contentWindow) {
+    return;
+  }
+  const poke = () => {
+    try {
+      contentWindow.dispatchEvent(new Event("resize"));
+      contentWindow.dispatchEvent(new Event("orientationchange"));
+    } catch {
+      /* ignore */
+    }
+  };
+  requestAnimationFrame(() => {
+    requestAnimationFrame(poke);
+  });
+  setTimeout(poke, 50);
+  setTimeout(poke, 400);
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   await uvSwReady;
 
@@ -305,6 +325,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  let resizeLayoutTimer;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeLayoutTimer);
+    resizeLayoutTimer = setTimeout(() => {
+      const activeFrame = iframeContainer?.querySelector("iframe.active");
+      requestIframeLayoutFix(activeFrame?.contentWindow ?? null);
+    }, 120);
+  });
+
   document.addEventListener("keydown", e => {
     const inUrlBar = e.target?.id === "input" || e.target?.closest?.(".url-form");
     if (e.ctrlKey || e.metaKey) {
@@ -454,6 +483,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       tb.title = "Hide tab bar";
     }
+    setTimeout(() => {
+      const activeFrame = document.querySelector("#frame-container iframe.active");
+      requestIframeLayoutFix(activeFrame?.contentWindow ?? null);
+    }, 80);
   });
 });
 
