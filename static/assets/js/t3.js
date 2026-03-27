@@ -53,6 +53,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const iframeContainer = document.getElementById("frame-container");
   let tabCounter = 1;
   let dragTab = null;
+  /** Only the first tab created in this page session may use sessionStorage GoUrl (main-site hand-off). */
+  let pendingInitialGoUrl = true;
 
   function syncTabAria() {
     for (const li of tabList.querySelectorAll("li")) {
@@ -63,6 +65,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function createNewTab() {
+    let newSrc = "/";
+
+    if (pendingInitialGoUrl) {
+      pendingInitialGoUrl = false;
+      const goUrl = sessionStorage.getItem("GoUrl");
+      if (goUrl !== null) {
+        newSrc = goUrl.includes("/e/") ? `${window.location.origin}${goUrl}` : `${window.location.origin}/a/${goUrl}`;
+      }
+    } else {
+      const popupUrl = sessionStorage.getItem("URL");
+      if (popupUrl !== null) {
+        newSrc = popupUrl.startsWith("http") ? popupUrl : `${window.location.origin}${popupUrl}`;
+        sessionStorage.removeItem("URL");
+      }
+    }
+
     const newTab = document.createElement("li");
     newTab.setAttribute("role", "tab");
     const tabTitle = document.createElement("span");
@@ -134,26 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     newIframe.addEventListener("load", onFrameLoad, { once: false });
-
-    const goUrl = sessionStorage.getItem("GoUrl");
-    const url = sessionStorage.getItem("URL");
-
-    if (tabCounter === 0 || tabCounter === 1) {
-      if (goUrl !== null) {
-        newIframe.src = goUrl.includes("/e/") ? window.location.origin + goUrl : `${window.location.origin}/a/${goUrl}`;
-      } else {
-        newIframe.src = "/";
-      }
-    } else if (tabCounter > 1) {
-      if (url !== null) {
-        newIframe.src = window.location.origin + url;
-        sessionStorage.removeItem("URL");
-      } else if (goUrl !== null) {
-        newIframe.src = goUrl.includes("/e/") ? window.location.origin + goUrl : `${window.location.origin}/a/${goUrl}`;
-      } else {
-        newIframe.src = "/";
-      }
-    }
+    newIframe.src = newSrc;
 
     iframeContainer.appendChild(newIframe);
     tabCounter += 1;
