@@ -15,14 +15,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const nav = document.querySelector(".f-nav");
 
   if (nav) {
-    const themeId = localStorage.getItem("theme");
-    let LogoUrl = "/assets/media/favicon/main.png";
-    if (themeId === "Inverted") {
-      LogoUrl = "/assets/media/favicon/main-inverted.png";
-    }
     const html = `
       <div id="icon-container">
-        <a class="icon" href="/./"><img alt="NovaDesk" id="INImg" src="${LogoUrl}"/></a>
+        <a class="icon brand-wordmark" href="/./">NovaDesk</a>
       </div>
       <div class="f-nav-right">
         <a class="navbar-link" href="/./a"><i class="fa-solid fa-gamepad navbar-icon"></i><an>&#71;&#97;</an><an>&#109;&#101;&#115;</an></a>

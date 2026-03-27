@@ -47,26 +47,35 @@ img {
    position: fixed;
 }
 
-.f-nav .icon:hover {
-   transform: translateY(-15%) scale(1.03);
-   font-weight: 800;
-}
-
-.f-nav .icon {
+.f-nav .icon.brand-wordmark {
    position: absolute;
    float: left;
-   text-transform: uppercase;
-   font-size: 30px;
-   font-family: "Inter", sans-serif;
+   left: 0;
+   top: 50%;
+   transform: translateY(-50%);
+   margin-left: 0;
+   padding: 0.15rem 0;
+   height: auto;
+   text-transform: none;
+   font-size: clamp(1.1rem, 2.4vw, 1.45rem);
+   font-family: "Syne", "Outfit", "Inter", sans-serif;
+   font-weight: 700;
+   letter-spacing: -0.03em;
+   line-height: 1.15;
    cursor: pointer;
-   color: var(--text-primary);
-   font-weight: 600;
-   margin-left: 5px;
    font-style: normal;
    text-decoration: none;
-   transition: all 0.2s ease;
-   height: 5vh;
-   top: 18%;
+   transition: transform 0.2s ease, filter 0.2s ease;
+   background: linear-gradient(125deg, #f8fafc 0%, #5eead4 45%, #a78bfa 100%);
+   -webkit-background-clip: text;
+   background-clip: text;
+   color: transparent;
+   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+}
+
+.f-nav .icon.brand-wordmark:hover {
+   transform: translateY(-50%) scale(1.04);
+   filter: drop-shadow(0 2px 12px rgba(94, 234, 212, 0.25));
 }
 
 .f-nav-right {
