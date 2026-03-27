@@ -188,7 +188,6 @@ document.addEventListener("DOMContentLoaded", event => {
     });
   }
 });
-
 function getRandomUrl() {
   const randomUrls = [
     "https://kahoot.it",
@@ -211,3 +210,4 @@ function getRandomUrl() {
 function randRange(min, max) {
   return Math.floor(Math.random() * (max - min) + min);
 }
+
