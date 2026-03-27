@@ -80,7 +80,12 @@ async function processUrl(value, path) {
     xprime = /xprime\.su/i.test(url);
   }
 
-  if (dyOn || xprime) {
+  if (dyOn) {
+    window.location.href = `/a/q/${enc}`;
+    return;
+  }
+  // XPrime (SPA): Dynamic /a/q/ avoids UV reload loops. Use tab shell when path is /d; otherwise same-window /a/q/ (e.g. home-in-iframe).
+  if (xprime && path !== "/d") {
     window.location.href = `/a/q/${enc}`;
     return;
   }

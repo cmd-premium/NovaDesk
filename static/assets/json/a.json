@@ -434,8 +434,7 @@
     "name": "XPrime",
     "link": "https://xprime.su/",
     "image": "/assets/media/icons/hd.webp",
-    "categories": ["all", "media", "stream"],
-    "dy": "true"
+    "categories": ["all", "media", "stream"]
   },
   {
     "name": "GBA Games",
