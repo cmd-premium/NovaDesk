@@ -1,103 +1,146 @@
-// tabs.js
+// tabs.js — NovaDesk tab shell
+function getSearchUrl() {
+  return localStorage.getItem("engine") || "https://search.brave.com/search?q=";
+}
+
 window.addEventListener("load", () => {
   navigator.serviceWorker.register("../sw.js?v=2025-04-15", { scope: "/a/" });
   const form = document.getElementById("fv");
   const input = document.getElementById("input");
   if (form && input) {
-    form.addEventListener("submit", async event => {
+    form.addEventListener("submit", event => {
       event.preventDefault();
       const formValue = input.value.trim();
-      const url = isUrl(formValue) ? prependHttps(formValue) : `https://search.brave.com/search?q=${formValue}`;
+      const searchBase = getSearchUrl();
+      const url = isUrl(formValue) ? prependHttps(formValue) : `${searchBase}${formValue}`;
       processUrl(url);
     });
   }
+
   function processUrl(url) {
     sessionStorage.setItem("GoUrl", __uv$config.encodeUrl(url));
     const iframeContainer = document.getElementById("frame-container");
-    const activeIframe = Array.from(iframeContainer.querySelectorAll("iframe")).find(iframe => iframe.classList.contains("active"));
+    const activeIframe = Array.from(iframeContainer.querySelectorAll("iframe")).find(iframe =>
+      iframe.classList.contains("active"),
+    );
+    if (!activeIframe) {
+      return;
+    }
     activeIframe.src = `/a/${__uv$config.encodeUrl(url)}`;
     activeIframe.dataset.tabUrl = url;
     input.value = url;
-    console.log(activeIframe.dataset.tabUrl);
   }
+
   function isUrl(val = "") {
     if (/^http(s?):\/\//.test(val) || (val.includes(".") && val.substr(0, 1) !== " ")) {
       return true;
     }
     return false;
   }
+
   function prependHttps(url) {
     if (!url.startsWith("http://") && !url.startsWith("https://")) {
       return `https://${url}`;
     }
     return url;
   }
+
 });
-document.addEventListener("DOMContentLoaded", event => {
+
+document.addEventListener("DOMContentLoaded", () => {
   const addTabButton = document.getElementById("add-tab");
   const tabList = document.getElementById("tab-list");
   const iframeContainer = document.getElementById("frame-container");
   let tabCounter = 1;
-  addTabButton.addEventListener("click", () => {
-    createNewTab();
-    Load();
-  });
+  let dragTab = null;
+
+  function syncTabAria() {
+    for (const li of tabList.querySelectorAll("li")) {
+      const on = li.classList.contains("active");
+      li.setAttribute("aria-selected", on ? "true" : "false");
+      li.setAttribute("tabindex", on ? "0" : "-1");
+    }
+  }
+
   function createNewTab() {
     const newTab = document.createElement("li");
+    newTab.setAttribute("role", "tab");
     const tabTitle = document.createElement("span");
     const newIframe = document.createElement("iframe");
-    newIframe.sandbox = "allow-same-origin allow-scripts allow-forms allow-pointer-lock allow-modals allow-orientation-lock allow-presentation allow-storage-access-by-user-activation";
-    // When Top Navigation is not allowed links with the "top" value will be entirely blocked, if we allow Top Navigation it will overwrite the tab, which is obviously not wanted.
+    newIframe.sandbox =
+      "allow-same-origin allow-scripts allow-forms allow-pointer-lock allow-modals allow-orientation-lock allow-presentation allow-storage-access-by-user-activation";
+
     tabTitle.textContent = `New Tab ${tabCounter}`;
     tabTitle.className = "t";
-    newTab.dataset.tabId = tabCounter;
+    newTab.dataset.tabId = String(tabCounter);
     newTab.addEventListener("click", switchTab);
-    newTab.setAttribute("draggable", true);
+    newTab.addEventListener("auxclick", e => {
+      if (e.button === 1) {
+        e.preventDefault();
+        closeTab(e, newTab);
+      }
+    });
+
+    newTab.setAttribute("draggable", "true");
+
     const closeButton = document.createElement("button");
+    closeButton.type = "button";
     closeButton.classList.add("close-tab");
+    closeButton.setAttribute("aria-label", "Close tab");
     closeButton.innerHTML = "&#10005;";
-    closeButton.addEventListener("click", closeTab);
+    closeButton.addEventListener("click", e => closeTab(e, newTab));
+
     newTab.appendChild(tabTitle);
     newTab.appendChild(closeButton);
     tabList.appendChild(newTab);
-    const allTabs = Array.from(tabList.querySelectorAll("li"));
-    for (const tab of allTabs) {
+
+    for (const tab of tabList.querySelectorAll("li")) {
       tab.classList.remove("active");
     }
-    const allIframes = Array.from(iframeContainer.querySelectorAll("iframe"));
-    for (const iframe of allIframes) {
+    for (const iframe of iframeContainer.querySelectorAll("iframe")) {
       iframe.classList.remove("active");
     }
+
     newTab.classList.add("active");
-    newIframe.dataset.tabId = tabCounter;
+    newIframe.dataset.tabId = String(tabCounter);
     newIframe.classList.add("active");
-    newIframe.addEventListener("load", () => {
-      const title = newIframe.contentDocument.title;
-      if (title.length <= 1) {
+
+    const onFrameLoad = () => {
+      try {
+        const doc = newIframe.contentDocument;
+        if (doc) {
+          const title = (doc.title || "").trim();
+          tabTitle.textContent = title.length > 1 ? title : "New Tab";
+          newTab.title = tabTitle.textContent;
+        }
+      } catch {
         tabTitle.textContent = "Tab";
-      } else {
-        tabTitle.textContent = title;
+        newTab.title = "Tab";
       }
-      newIframe.contentWindow.open = url => {
-        sessionStorage.setItem("URL", `/a/${__uv$config.encodeUrl(url)}`);
-        createNewTab();
-        return null;
-      };
-      if (newIframe.contentDocument.documentElement.outerHTML.trim().length > 0) {
-        Load();
+
+      try {
+        if (newIframe.contentWindow) {
+          newIframe.contentWindow.open = url => {
+            sessionStorage.setItem("URL", `/a/${__uv$config.encodeUrl(url)}`);
+            createNewTab();
+            return null;
+          };
+        }
+      } catch {
+        /* cross-origin */
       }
+
       Load();
-    });
+    };
+
+    newIframe.addEventListener("load", onFrameLoad, { once: false });
+
     const goUrl = sessionStorage.getItem("GoUrl");
     const url = sessionStorage.getItem("URL");
 
     if (tabCounter === 0 || tabCounter === 1) {
       if (goUrl !== null) {
-        if (goUrl.includes("/e/")) {
-          newIframe.src = window.location.origin + goUrl;
-        } else {
-          newIframe.src = `${window.location.origin}/a/${goUrl}`;
-        }
+        newIframe.src = goUrl.includes("/e/") ? window.location.origin + goUrl : `${window.location.origin}/a/${goUrl}`;
       } else {
         newIframe.src = "/";
       }
@@ -106,11 +149,7 @@ document.addEventListener("DOMContentLoaded", event => {
         newIframe.src = window.location.origin + url;
         sessionStorage.removeItem("URL");
       } else if (goUrl !== null) {
-        if (goUrl.includes("/e/")) {
-          newIframe.src = window.location.origin + goUrl;
-        } else {
-          newIframe.src = `${window.location.origin}/a/${goUrl}`;
-        }
+        newIframe.src = goUrl.includes("/e/") ? window.location.origin + goUrl : `${window.location.origin}/a/${goUrl}`;
       } else {
         newIframe.src = "/";
       }
@@ -118,96 +157,158 @@ document.addEventListener("DOMContentLoaded", event => {
 
     iframeContainer.appendChild(newIframe);
     tabCounter += 1;
+    newTab.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "end" });
+    syncTabAria();
   }
-  function closeTab(event) {
-    event.stopPropagation();
-    const tabId = event.target.closest("li").dataset.tabId;
-    const tabToRemove = tabList.querySelector(`[data-tab-id='${tabId}']`);
-    const iframeToRemove = iframeContainer.querySelector(`[data-tab-id='${tabId}']`);
-    if (tabToRemove && iframeToRemove) {
-      tabToRemove.remove();
-      iframeToRemove.remove();
-      const remainingTabs = Array.from(tabList.querySelectorAll("li"));
-      if (remainingTabs.length === 0) {
-        tabCounter = 0;
-        document.getElementById("input").value = "";
-      } else {
-        const nextTabIndex = remainingTabs.findIndex(tab => tab.dataset.tabId !== tabId);
-        if (nextTabIndex > -1) {
-          const nextTabToActivate = remainingTabs[nextTabIndex];
-          const nextIframeToActivate = iframeContainer.querySelector(`[data-tab-id='${nextTabToActivate.dataset.tabId}']`);
-          for (const tab of remainingTabs) {
-            tab.classList.remove("active");
-          }
-          remainingTabs[nextTabIndex].classList.add("active");
-          const allIframes = Array.from(iframeContainer.querySelectorAll("iframe"));
-          for (const iframe of allIframes) {
-            iframe.classList.remove("active");
-          }
-          nextIframeToActivate.classList.add("active");
+
+  function closeTab(event, tabEl) {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    const li = tabEl || event?.target?.closest("li");
+    if (!li) {
+      return;
+    }
+    const tabId = li.dataset.tabId;
+    const tabToRemove = tabList.querySelector(`[data-tab-id="${tabId}"]`);
+    const iframeToRemove = iframeContainer.querySelector(`iframe[data-tab-id="${tabId}"]`);
+    if (!tabToRemove || !iframeToRemove) {
+      return;
+    }
+    tabToRemove.remove();
+    iframeToRemove.remove();
+
+    const remainingTabs = Array.from(tabList.querySelectorAll("li"));
+    if (remainingTabs.length === 0) {
+      tabCounter = 0;
+      const inputEl = document.getElementById("input");
+      if (inputEl) {
+        inputEl.value = "";
+      }
+      createNewTab();
+      return;
+    }
+
+    const nextTabIndex = remainingTabs.findIndex(tab => tab.dataset.tabId !== tabId);
+    if (nextTabIndex > -1) {
+      for (const tab of remainingTabs) {
+        tab.classList.remove("active");
+      }
+      for (const iframe of iframeContainer.querySelectorAll("iframe")) {
+        iframe.classList.remove("active");
+      }
+      remainingTabs[nextTabIndex].classList.add("active");
+      const nextIframe = iframeContainer.querySelector(
+        `iframe[data-tab-id="${remainingTabs[nextTabIndex].dataset.tabId}"]`,
+      );
+      if (nextIframe) {
+        nextIframe.classList.add("active");
+      }
+      Load();
+    }
+    syncTabAria();
+  }
+
+  function switchTab(event) {
+    if (event.target.closest(".close-tab")) {
+      return;
+    }
+    const li = event.target.closest("li");
+    if (!li) {
+      return;
+    }
+    const tabId = li.dataset.tabId;
+    for (const tab of tabList.querySelectorAll("li")) {
+      tab.classList.remove("active");
+    }
+    for (const iframe of iframeContainer.querySelectorAll("iframe")) {
+      iframe.classList.remove("active");
+    }
+    const selectedTab = tabList.querySelector(`[data-tab-id="${tabId}"]`);
+    if (selectedTab) {
+      selectedTab.classList.add("active");
+    }
+    const selectedIframe = iframeContainer.querySelector(`iframe[data-tab-id="${tabId}"]`);
+    if (selectedIframe) {
+      selectedIframe.classList.add("active");
+    }
+    Load();
+    syncTabAria();
+  }
+
+  addTabButton.addEventListener("click", () => {
+    createNewTab();
+  });
+
+  tabList.addEventListener("dragstart", event => {
+    const li = event.target.closest("li");
+    if (!li) {
+      event.preventDefault();
+      return;
+    }
+    dragTab = li;
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", li.dataset.tabId);
+    li.classList.add("dragging");
+  });
+
+  tabList.addEventListener("dragend", event => {
+    const li = event.target.closest("li");
+    if (li) {
+      li.classList.remove("dragging");
+    }
+    dragTab = null;
+  });
+
+  tabList.addEventListener("dragover", event => {
+    event.preventDefault();
+    const targetTab = event.target.closest("li");
+    if (!targetTab || !dragTab || targetTab === dragTab) {
+      return;
+    }
+    const targetIndex = Array.from(tabList.children).indexOf(targetTab);
+    const dragIndex = Array.from(tabList.children).indexOf(dragTab);
+    if (targetIndex < dragIndex) {
+      tabList.insertBefore(dragTab, targetTab);
+    } else {
+      tabList.insertBefore(dragTab, targetTab.nextSibling);
+    }
+  });
+
+  document.addEventListener("keydown", e => {
+    const inUrlBar = e.target?.id === "input" || e.target?.closest?.(".url-form");
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key.toLowerCase() === "t") {
+        e.preventDefault();
+        createNewTab();
+        return;
+      }
+      if (e.key.toLowerCase() === "w") {
+        if (inUrlBar) {
+          return;
+        }
+        e.preventDefault();
+        const activeLi = tabList.querySelector("li.active");
+        if (activeLi) {
+          closeTab(null, activeLi);
         }
       }
     }
-  }
-  function switchTab(event) {
-    const tabId = event.target.closest("li").dataset.tabId;
-    const allTabs = Array.from(tabList.querySelectorAll("li"));
-    for (const tab of allTabs) {
-      tab.classList.remove("active");
-    }
-    const allIframes = Array.from(iframeContainer.querySelectorAll("iframe"));
-    for (const iframe of allIframes) {
-      iframe.classList.remove("active");
-    }
-    const selectedTab = tabList.querySelector(`[data-tab-id='${tabId}']`);
-    if (selectedTab) {
-      selectedTab.classList.add("active");
-      Load();
-    } else {
-      console.log("No selected tab found with ID:", tabId);
-    }
-    const selectedIframe = iframeContainer.querySelector(`[data-tab-id='${tabId}']`);
-    if (selectedIframe) {
-      selectedIframe.classList.add("active");
-    } else {
-      console.log("No selected iframe found with ID:", tabId);
-    }
-  }
-  let dragTab = null;
-  tabList.addEventListener("dragstart", event => {
-    dragTab = event.target;
   });
-  tabList.addEventListener("dragover", event => {
-    event.preventDefault();
-    const targetTab = event.target;
-    if (targetTab.tagName === "LI" && targetTab !== dragTab) {
-      const targetIndex = Array.from(tabList.children).indexOf(targetTab);
-      const dragIndex = Array.from(tabList.children).indexOf(dragTab);
-      if (targetIndex < dragIndex) {
-        tabList.insertBefore(dragTab, targetTab);
-      } else {
-        tabList.insertBefore(dragTab, targetTab.nextSibling);
-      }
-    }
-  });
-  tabList.addEventListener("dragend", () => {
-    dragTab = null;
-  });
+
   createNewTab();
 });
-// Reload
+
 function reload() {
   const activeIframe = document.querySelector("#frame-container iframe.active");
   if (activeIframe) {
-    // biome-ignore lint: idk
-    activeIframe.src = activeIframe.src;
+    const { src } = activeIframe;
+    activeIframe.src = src;
     Load();
-  } else {
-    console.error("No active iframe found");
   }
 }
 
-// Popout
 function popout() {
   const activeIframe = document.querySelector("#frame-container iframe.active");
   if (activeIframe) {
@@ -232,137 +333,136 @@ function popout() {
 
       newWindow.document.body.appendChild(newIframe);
     }
-  } else {
-    console.error("No active iframe found");
   }
 }
 
 function eToggle() {
   const activeIframe = document.querySelector("#frame-container iframe.active");
   if (!activeIframe) {
-    console.error("No active iframe found");
     return;
   }
   const erudaWindow = activeIframe.contentWindow;
   if (!erudaWindow) {
-    console.error("No content window found for the active iframe");
     return;
   }
   if (erudaWindow.eruda) {
     if (erudaWindow.eruda._isInit) {
       erudaWindow.eruda.destroy();
-    } else {
-      console.error("Eruda is not initialized in the active iframe");
     }
   } else {
     const erudaDocument = activeIframe.contentDocument;
     if (!erudaDocument) {
-      console.error("No content document found for the active iframe");
       return;
     }
     const script = erudaDocument.createElement("script");
     script.src = "https://cdn.jsdelivr.net/npm/eruda";
     script.onload = () => {
-      if (!erudaWindow.eruda) {
-        console.error("Failed to load Eruda in the active iframe");
-        return;
+      if (erudaWindow.eruda) {
+        erudaWindow.eruda.init();
+        erudaWindow.eruda.show();
       }
-      erudaWindow.eruda.init();
-      erudaWindow.eruda.show();
     };
     erudaDocument.head.appendChild(script);
   }
 }
-// Fullscreen
+
 function FS() {
   const activeIframe = document.querySelector("#frame-container iframe.active");
-  if (activeIframe) {
+  if (activeIframe?.contentDocument) {
     if (activeIframe.contentDocument.fullscreenElement) {
       activeIframe.contentDocument.exitFullscreen();
     } else {
       activeIframe.contentDocument.documentElement.requestFullscreen();
     }
-  } else {
-    console.error("No active iframe found");
   }
 }
-const fullscreenButton = document.getElementById("fullscreen-button");
-fullscreenButton.addEventListener("click", FS);
-// Home
+
 function Home() {
   window.location.href = "./";
 }
-const homeButton = document.getElementById("home-page");
-homeButton.addEventListener("click", Home);
-// Back
+
 function goBack() {
   const activeIframe = document.querySelector("#frame-container iframe.active");
-  if (activeIframe) {
-    activeIframe.contentWindow.history.back();
-    iframe.src = activeIframe.src;
-    Load();
-  } else {
-    console.error("No active iframe found");
+  if (activeIframe?.contentWindow) {
+    try {
+      activeIframe.contentWindow.history.back();
+    } catch {
+      /* cross-origin */
+    }
+    setTimeout(Load, 150);
   }
 }
-// Forward
+
 function goForward() {
   const activeIframe = document.querySelector("#frame-container iframe.active");
-  if (activeIframe) {
-    activeIframe.contentWindow.history.forward();
-    iframe.src = activeIframe.src;
-    Load();
-  } else {
-    console.error("No active iframe found");
+  if (activeIframe?.contentWindow) {
+    try {
+      activeIframe.contentWindow.history.forward();
+    } catch {
+      /* cross-origin */
+    }
+    setTimeout(Load, 150);
   }
 }
-// Remove Nav
+
 document.addEventListener("DOMContentLoaded", () => {
   const tb = document.getElementById("tabs-button");
   const nb = document.getElementById("right-side-nav");
+  if (!tb || !nb) {
+    return;
+  }
   tb.addEventListener("click", () => {
-    const activeIframe = document.querySelector("#frame-container iframe.active");
-    if (nb.style.display === "none") {
-      nb.style.display = "";
-      activeIframe.style.top = "10%";
-      activeIframe.style.height = "90%";
-      tb.querySelector("i").classList.remove("fa-magnifying-glass-plus");
-      tb.querySelector("i").classList.add("fa-magnifying-glass-minus");
+    document.body.classList.toggle("tabs-shell--strip-hidden");
+    const icon = tb.querySelector("i");
+    if (document.body.classList.contains("tabs-shell--strip-hidden")) {
+      if (icon) {
+        icon.className = "fa-solid fa-table-cells-large";
+      }
+      tb.title = "Show tab bar";
     } else {
-      nb.style.display = "none";
-      activeIframe.style.top = "5%";
-      activeIframe.style.height = "95%";
-      tb.querySelector("i").classList.remove("fa-magnifying-glass-minus");
-      tb.querySelector("i").classList.add("fa-magnifying-glass-plus");
+      if (icon) {
+        icon.className = "fa-solid fa-table-cells";
+      }
+      tb.title = "Hide tab bar";
     }
   });
 });
+
 if (navigator.userAgent.includes("Chrome")) {
   window.addEventListener("resize", () => {
     navigator.keyboard.lock(["Escape"]);
   });
 }
+
 function Load() {
   const activeIframe = document.querySelector("#frame-container iframe.active");
-  if (activeIframe && activeIframe.contentWindow.document.readyState === "complete") {
-    const website = activeIframe.contentWindow.document.location.href;
-    if (website.includes("/a/")) {
-      const websitePath = website.replace(window.location.origin, "").replace("/a/", "");
-      localStorage.setItem("decoded", websitePath);
-      const decodedValue = decodeXor(websitePath);
-      document.getElementById("input").value = decodedValue;
-    } else if (website.includes("/a/q/")) {
-      const websitePath = website.replace(window.location.origin, "").replace("/a/q/", "");
-      const decodedValue = decodeXor(websitePath);
-      localStorage.setItem("decoded", websitePath);
-      document.getElementById("input").value = decodedValue;
-    } else {
-      const websitePath = website.replace(window.location.origin, "");
-      document.getElementById("input").value = websitePath;
-      localStorage.setItem("decoded", websitePath);
+  const inputEl = document.getElementById("input");
+  if (!activeIframe || !inputEl) {
+    return;
+  }
+  try {
+    if (activeIframe.contentWindow?.document.readyState === "complete") {
+      const website = activeIframe.contentWindow.document.location.href;
+      if (website.includes("/a/") && !website.includes("/a/q/")) {
+        const websitePath = website.replace(window.location.origin, "").replace("/a/", "");
+        localStorage.setItem("decoded", websitePath);
+        inputEl.value = decodeXor(websitePath);
+      } else if (website.includes("/a/q/")) {
+        const websitePath = website.replace(window.location.origin, "").replace("/a/q/", "");
+        const decodedValue = decodeXor(websitePath);
+        localStorage.setItem("decoded", websitePath);
+        inputEl.value = decodedValue;
+      } else {
+        const websitePath = website.replace(window.location.origin, "");
+        inputEl.value = websitePath;
+        localStorage.setItem("decoded", websitePath);
+      }
     }
+  } catch {
+    /* cross-origin — keep bar as-is */
   }
 }
+
 function decodeXor(input) {
   if (!input) {
     return input;
@@ -371,7 +471,7 @@ function decodeXor(input) {
   return (
     decodeURIComponent(str)
       .split("")
-      .map((char, ind) => (ind % 2 ? String.fromCharCode(char.charCodeAt(Number.NaN) ^ 2) : char))
+      .map((char, ind) => (ind % 2 ? String.fromCharCode(char.charCodeAt(0) ^ 2) : char))
       .join("") + (search.length ? `?${search.join("?")}` : "")
   );
 }

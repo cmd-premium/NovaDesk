@@ -98,6 +98,10 @@
    box-shadow: 0 0 0 1px rgba(94, 234, 212, 0.15);
 }
 
+#tab-list li.dragging {
+   opacity: 0.75;
+}
+
 #tab-list li .t {
    flex: 1;
    min-width: 0;
