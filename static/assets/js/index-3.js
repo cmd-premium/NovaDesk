@@ -4,10 +4,7 @@ const UV_SW_SCOPE = { scope: "/a/" };
 
 let uvSwReady = Promise.resolve();
 if ("serviceWorker" in navigator) {
-  uvSwReady = navigator.serviceWorker
-    .register(UV_SW_URL, UV_SW_SCOPE)
-    .then(() => navigator.serviceWorker.ready)
-    .catch(() => {});
+  uvSwReady = navigator.serviceWorker.register(UV_SW_URL, UV_SW_SCOPE).catch(() => {});
 }
 
 function isInIframe() {

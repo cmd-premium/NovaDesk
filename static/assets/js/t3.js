@@ -3,12 +3,10 @@ function getSearchUrl() {
   return localStorage.getItem("engine") || "https://search.brave.com/search?q=";
 }
 
+// Await registration only; `navigator.serviceWorker.ready` can hang and block tab setup.
 let uvSwReady = Promise.resolve();
 if ("serviceWorker" in navigator) {
-  uvSwReady = navigator.serviceWorker
-    .register("../sw.js?v=2025-04-15", { scope: "/a/" })
-    .then(() => navigator.serviceWorker.ready)
-    .catch(() => {});
+  uvSwReady = navigator.serviceWorker.register("../sw.js?v=2025-04-15", { scope: "/a/" }).catch(() => {});
 }
 
 function isUrl(val = "") {
@@ -235,7 +233,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     syncTabAria();
   }
 
-  addTabButton.addEventListener("click", () => {
+  addTabButton?.addEventListener("click", () => {
     createNewTab();
   });
 
