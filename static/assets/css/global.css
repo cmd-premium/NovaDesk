@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Poppins&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&display=swap");
 
 :root {
    /* Background Variables */
@@ -54,16 +55,30 @@
    background-color: var(--text-dark);
 }
 
+html {
+   margin: 0;
+   height: 100%;
+}
+
 body {
    font-family: "Inter", sans-serif;
    text-decoration: none;
    background: var(--background-image);
+   margin: 0;
    min-height: 100%;
+   min-height: 100dvh;
    background-position: center;
    background-repeat: no-repeat;
    background-size: cover;
    background-attachment: fixed;
    position: relative;
+}
+
+body.center {
+   display: flex;
+   flex-direction: column;
+   min-height: 100vh;
+   min-height: 100dvh;
 }
 
 body::before {

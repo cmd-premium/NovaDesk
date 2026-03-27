@@ -8,25 +8,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="shortcut icon" id="tab-favicon" href="favicon.png" />
   <title id="t">Home</title>
-  <link rel="stylesheet" href="/assets/css/global.css?v=6" />
-  <link rel="stylesheet" href="/assets/css/h.css?v=01" />
-  <link rel="stylesheet" href="/assets/css/nav.css?v=01" />
+  <link rel="stylesheet" href="/assets/css/global.css?v=7" />
+  <link rel="stylesheet" href="/assets/css/h.css?v=03" />
+  <link rel="stylesheet" href="/assets/css/nav.css?v=02" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6840529569014734"
     crossorigin="anonymous"></script>
 </head>
 
-<body class="center" onload="SplashT">
+<body class="center">
   <div class="f-nav"></div>
   <div id="particles-js">
     <script rel="preload" src="https://cdn.jsdelivr.net/particles.js/2.0.0/"></script>
     <div class="main">
-      <h1 class="title">NovaDesk</h1>
-      <p id="splash"></p>
-      <div class="search-container">
-        <form id="fv" method="POST">
-          <input id="input" class="truncate" placeholder="Search or enter a URL" type="text" />
-        </form>
+      <div class="hero-inner">
+        <h1 class="title">NovaDesk</h1>
+        <p class="hero-tagline">Your desk on the <span>open web</span></p>
+        <p id="splash"></p>
+        <div class="search-container">
+          <form id="fv" method="POST">
+            <div class="search-wrap">
+              <i class="fa-solid fa-magnifying-glass search-ic" aria-hidden="true"></i>
+              <input
+                id="input"
+                class="home-search"
+                placeholder="Search or enter a URL"
+                type="text"
+                autocomplete="off"
+              />
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>

@@ -49,7 +49,20 @@ if (!inFrame && !navigator.userAgent.includes("Firefox") && localStorage.getItem
     }
   }, 2000);
 }
-// Particles
+
+const SplashT = [
+  "NovaDesk — search, apps, and games in one calm home",
+  "Tip: open Settings to tweak themes and tab cloak",
+  "Your space. Your tabs.",
+  "Click this line for another quick tip",
+  "Bookmark NovaDesk for one-tap access",
+  "Use the nav for Games, Apps, and Tabs",
+  "Optional particles: flip them on in Settings",
+  "Pick a search engine that fits how you browse",
+  "Set a custom background—make it yours",
+  "Built for a fast, uncluttered home screen",
+];
+
 document.addEventListener("DOMContentLoaded", event => {
   if (window.localStorage.getItem("Particles") === "true") {
     const particlesConfig = {
@@ -164,33 +177,18 @@ document.addEventListener("DOMContentLoaded", event => {
     };
     particlesJS("particles-js", particlesConfig);
   }
+
+  const splashEl = document.getElementById("splash");
+  if (splashEl) {
+    let splashI = Math.floor(Math.random() * SplashT.length);
+    splashEl.textContent = SplashT[splashI];
+    splashEl.addEventListener("click", () => {
+      splashI = (splashI + 1) % SplashT.length;
+      splashEl.textContent = SplashT[splashI];
+    });
+  }
 });
-// Splash texts
-const SplashT = [
-  "Search the web or jump straight to a link",
-  "Tip: open Settings to tweak themes and cloak",
-  "Your space. Your tabs.",
-  "Glass panels, sharp type, zero clutter",
-  "Bookmark this page for quick access",
-  "Try the Games and Apps sections from the nav",
-  "Particles are optional—toggle them in Settings",
-  "Pick a search engine that fits you",
-  "Custom backgrounds? You got it.",
-  "Built for speed and a clean home screen",
-];
 
-let SplashI = Math.floor(Math.random() * SplashT.length);
-const SplashE = document.getElementById("splash");
-
-function US() {
-  SplashI = (SplashI + 1) % SplashT.length;
-  SplashE.innerText = SplashT[SplashI];
-}
-
-SplashE.innerText = SplashT[SplashI];
-
-SplashE.addEventListener("click", US);
-// Random URL
 function getRandomUrl() {
   const randomUrls = [
     "https://kahoot.it",
