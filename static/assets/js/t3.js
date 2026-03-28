@@ -6,7 +6,7 @@ function getSearchUrl() {
 // Await registration only; `navigator.serviceWorker.ready` can hang and block tab setup.
 let uvSwReady = Promise.resolve();
 if ("serviceWorker" in navigator) {
-  uvSwReady = navigator.serviceWorker.register("../sw.js?v=2026-03-29", { scope: "/" }).catch(() => {});
+  uvSwReady = navigator.serviceWorker.register("../sw.js?v=2026-03-30", { scope: "/" }).catch(() => {});
 }
 
 function isUrl(val = "") {

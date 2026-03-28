@@ -218,7 +218,6 @@ class RequestContext {
             this.url.port || ("https:" === this.url.protocol ? "443" : "80"),
           "x-bare-headers": JSON.stringify(this.headers),
           "x-bare-forward-headers": JSON.stringify(this.forward),
-          userKey: userKey,
         },
         redirect: this.redirect,
         credentials: this.credentials,
