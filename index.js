@@ -90,7 +90,20 @@ app.use(express.urlencoded({ extended: true }));
   setupMasqr(app);
 } */
 
-app.use(express.static(path.join(__dirname, "static")));
+const staticMaxAgeMs =
+  process.env.STATIC_MAX_AGE_MS === "0"
+    ? 0
+    : Number.parseInt(process.env.STATIC_MAX_AGE_MS || "3600000", 10) || 3600000;
+app.use(
+  /**
+   * Cache immutable-feeling assets in static/ for repeat visits; proxy routes are not served from here.
+   */
+  express.static(path.join(__dirname, "static"), {
+    maxAge: staticMaxAgeMs,
+    etag: true,
+    lastModified: true,
+  }),
+);
 app.use("/ca", cors({ origin: true }));
 
 const routes = [

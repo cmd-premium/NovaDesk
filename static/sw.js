@@ -10,20 +10,27 @@ const dynamic = new Dynamic();
 self.addEventListener("fetch", event => {
   event.respondWith(
     (async () => {
-      const url = event.request.url;
+      const req = event.request;
+      const url = req.url;
       const origin = location.origin;
-      // Dynamic's route() returns a falsy value for direct /a/q/ navigations due to its
-      // internal comma-expression; always proxy /a/q/ here.
-      if (url.startsWith(`${origin}/a/q/`)) {
-        return dynamic.fetch(event);
+
+      // Fast paths for same-origin: avoid dynamic.route() on every asset — it calls
+      // clients.matchAll() and makes the whole app feel sluggish.
+      if (url.startsWith(origin)) {
+        if (url.startsWith(`${origin}/a/q/`)) {
+          return dynamic.fetch(event);
+        }
+        if (url.startsWith(`${origin}/a/`)) {
+          return uv.fetch(event);
+        }
+        return fetch(req);
       }
+
+      // Cross-origin (e.g. subresources opened via Dynamic): still need route().
       if (await dynamic.route(event)) {
         return dynamic.fetch(event);
       }
-      if (url.startsWith(`${origin}/a/`) && !url.startsWith(`${origin}/a/q/`)) {
-        return uv.fetch(event);
-      }
-      return fetch(event.request);
+      return fetch(req);
     })(),
   );
 });

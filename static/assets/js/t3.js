@@ -6,7 +6,7 @@ function getSearchUrl() {
 // Await registration only; `navigator.serviceWorker.ready` can hang and block tab setup.
 let uvSwReady = Promise.resolve();
 if ("serviceWorker" in navigator) {
-  uvSwReady = navigator.serviceWorker.register("../sw.js?v=2026-03-30", { scope: "/" }).catch(() => {});
+  uvSwReady = navigator.serviceWorker.register("../sw.js?v=2026-03-31", { scope: "/" }).catch(() => {});
 }
 
 function isUrl(val = "") {
@@ -36,11 +36,8 @@ function requestIframeLayoutFix(contentWindow) {
       /* ignore */
     }
   };
-  requestAnimationFrame(() => {
-    requestAnimationFrame(poke);
-  });
-  setTimeout(poke, 50);
-  setTimeout(poke, 400);
+  requestAnimationFrame(poke);
+  setTimeout(poke, 100);
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -489,12 +486,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 80);
   });
 });
-
-if (navigator.userAgent.includes("Chrome")) {
-  window.addEventListener("resize", () => {
-    navigator.keyboard.lock(["Escape"]);
-  });
-}
 
 function Load() {
   const activeIframe = document.querySelector("#frame-container iframe.active");
