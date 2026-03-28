@@ -1,5 +1,5 @@
 // index.js — home search / navigation
-const UV_SW_URL = "../sw.js?v=2026-03-27-sj";
+const UV_SW_URL = "../sw.js?v=2026-03-28";
 const UV_SW_SCOPE = { scope: "/a/" };
 
 let uvSwReady = Promise.resolve();
@@ -70,10 +70,10 @@ async function processUrl(value, path) {
     url = `https://${url}`;
   }
 
-  const enc = encodeProxyTarget(url);
+  const enc = __uv$config.encodeUrl(url);
   sessionStorage.setItem("GoUrl", enc);
   sessionStorage.setItem("GoUrlHint", url);
-  const mode = getProxyMode();
+  const dyOn = localStorage.getItem("dy") === "true";
   let xprime = false;
   try {
     xprime = /(^|\.)xprime\.su$/i.test(new URL(url).hostname);
@@ -81,21 +81,17 @@ async function processUrl(value, path) {
     xprime = /xprime\.su/i.test(url);
   }
 
-  // Dynamic preference (dy) must not skip /d — tabs always load first; iframes follow getProxyMode (see t3.js).
-  // XPrime: alternate tunnel when not using the tab shell (path !== "/d"; e.g. home embedded in an iframe).
+  // Dynamic preference (dy) must not skip /d — tabs always load first; iframes use /a/q/ when dy is on (see t3.js).
+  // XPrime: full /a/q/ only when not using the tab shell (path !== "/d"; e.g. home embedded in an iframe).
   if (xprime && path !== "/d") {
-    const xpPrefix = mode === "sj" ? "/a/sj/" : "/a/q/";
-    window.location.href = `${xpPrefix}${enc}`;
+    window.location.href = `/a/q/${enc}`;
     return;
   }
   if (path) {
     location.href = path;
-  } else if (mode === "sj") {
-    window.location.href = `/a/sj/${enc}`;
-  } else if (mode === "dy" || xprime) {
-    window.location.href = `/a/q/${enc}`;
   } else {
-    window.location.href = `/a/${enc}`;
+    const dyn = dyOn || xprime;
+    window.location.href = dyn ? `/a/q/${enc}` : `/a/${enc}`;
   }
 }
 
@@ -107,19 +103,8 @@ function blank(value) {
   void processUrl(value);
 }
 
-function dyForcedTunnelPrefix() {
-  return getProxyMode() === "sj" ? "/a/sj/" : "/a/q/";
-}
-
 function dy(value) {
-  let u = value.trim();
-  const searchUrl = localStorage.getItem("engine") || "https://search.brave.com/search?q=";
-  if (!isUrl(u)) {
-    u = searchUrl + u;
-  } else if (!(u.startsWith("https://") || u.startsWith("http://"))) {
-    u = `https://${u}`;
-  }
-  void processUrl(u, `${dyForcedTunnelPrefix()}${encodeProxyTarget(u)}`);
+  void processUrl(value, `/a/q/${__uv$config.encodeUrl(value)}`);
 }
 
 function isUrl(val = "") {

@@ -28,6 +28,11 @@ document.addEventListener("DOMContentLoaded", () => {
     nav.innerHTML = html;
   }
 
+  if (localStorage.getItem("proxy") === "sj") {
+    localStorage.setItem("proxy", "uv");
+    localStorage.setItem("uv", "true");
+    localStorage.setItem("dy", "false");
+  }
   if (!localStorage.getItem("proxy")) {
     if (localStorage.getItem("dy") === "true" || localStorage.getItem("dy") === "auto") {
       localStorage.setItem("proxy", "dy");

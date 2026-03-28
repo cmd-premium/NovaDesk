@@ -54,10 +54,6 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.setItem("proxy", "dy");
       localStorage.setItem("uv", "false");
       localStorage.setItem("dy", "true");
-    } else if (selectedValue === "sj") {
-      localStorage.setItem("proxy", "sj");
-      localStorage.setItem("uv", "false");
-      localStorage.setItem("dy", "false");
     }
   }
 
@@ -69,10 +65,14 @@ document.addEventListener("DOMContentLoaded", () => {
       pChange(selectedOption);
     });
 
+    if (localStorage.getItem("proxy") === "sj") {
+      localStorage.setItem("proxy", "uv");
+      localStorage.setItem("uv", "true");
+      localStorage.setItem("dy", "false");
+    }
+
     const proxy = localStorage.getItem("proxy");
-    if (proxy === "sj") {
-      pChangeElement.value = "sj";
-    } else if (proxy === "dy") {
+    if (proxy === "dy") {
       pChangeElement.value = "dy";
     } else if (localStorage.getItem("dy") === "true" || localStorage.getItem("dy") === "auto") {
       pChangeElement.value = "dy";
