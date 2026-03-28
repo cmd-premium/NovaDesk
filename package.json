@@ -9,8 +9,8 @@
   "scripts": {
     "postinstall": "node scripts/copy-scramjet.mjs",
     "start": "node index.js",
-    "format": "pnpm biome format --write .",
-    "precommit": "pnpm run format && pnpm biome check --write .",
+    "format": "biome format --write .",
+    "precommit": "npm run format && biome check --write .",
     "lint": "biome lint --write .",
     "sync:github": "node scripts/auto-github-sync.mjs",
     "sync:github:once": "node scripts/auto-github-sync.mjs --once"
@@ -33,6 +33,5 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.2"
-  },
-  "packageManager": "pnpm@9.10.0"
+  }
 }

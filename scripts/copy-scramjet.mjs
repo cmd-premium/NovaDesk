@@ -36,7 +36,7 @@ function bareMuxV1BareCjsPath() {
     }
   }
   throw new Error(
-    "Could not find Scramjet's bare-mux v1 bare.cjs. npm/pnpm may have changed paths — run pnpm install and retry.",
+    "Could not find Scramjet's bare-mux v1 bare.cjs (npm may have moved paths). Run npm install and retry.",
   );
 }
 
