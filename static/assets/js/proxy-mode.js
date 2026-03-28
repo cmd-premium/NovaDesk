@@ -1,4 +1,4 @@
-/** Proxy engine: uv (Ultraviolet), dy (Dynamic), sj (Scramjet). */
+/** Proxy engine: uv (Ultraviolet), dy (Dynamic), sj (Scramjet v2). */
 function getProxyMode() {
   const p = localStorage.getItem("proxy");
   if (p === "dy" || p === "sj" || p === "uv") {
@@ -21,15 +21,25 @@ function getProxyPathPrefix() {
   }
 }
 
-/** Encode target URL for the active proxy (Scramjet vs UV xor). */
-function encodeProxyTarget(resolvedUrlString) {
-  const mode = getProxyMode();
+/** Encode URL for Scramjet v2 default codec (encodeURIComponent), matching ScramjetController.encodeUrl. */
+function encodeScramjetV2Target(resolvedUrlString) {
   const u = new URL(resolvedUrlString);
-  if (mode === "sj") {
-    if (!self.__scramjet$bundle) {
-      throw new Error("Scramjet bundle not loaded");
+  if (u.protocol !== "http:" && u.protocol !== "https:") {
+    return u.href;
+  }
+  const encodedHash = encodeURIComponent(u.hash.slice(1));
+  const realHash = encodedHash ? `#${encodedHash}` : "";
+  u.hash = "";
+  return `${getProxyPathPrefix()}${encodeURIComponent(u.href)}${realHash}`;
+}
+
+/** Encode target URL for the active proxy (Scramjet v2 vs UV / Dynamic). */
+function encodeProxyTarget(resolvedUrlString) {
+  if (getProxyMode() === "sj") {
+    if (globalThis.__scramjetNovaDesk?.encodeUrl) {
+      return globalThis.__scramjetNovaDesk.encodeUrl(resolvedUrlString);
     }
-    return self.__scramjet$bundle.rewriters.url.encodeUrl(u.href, u);
+    return encodeScramjetV2Target(resolvedUrlString);
   }
   return __uv$config.encodeUrl(resolvedUrlString);
 }

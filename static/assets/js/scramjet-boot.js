@@ -3,23 +3,58 @@
     if (typeof getProxyMode !== "function" || getProxyMode() !== "sj") {
       return;
     }
-    if (typeof BareMux === "undefined" || typeof BareMux.SetSingletonTransport !== "function") {
-      console.warn("NovaDesk: BareMux v1 missing; load /assets/bare-mux/uuid-shim.js then bare-mux-v1.cjs");
+    if (typeof $scramjetLoadController !== "function") {
+      console.warn("NovaDesk: load scramjet.all.js before scramjet-boot");
+      return;
+    }
+    if (typeof BareMux === "undefined" || !BareMux.BareMuxConnection) {
+      console.warn("NovaDesk: BareMux v2 missing (/assets/bare-mux/index.js)");
       return;
     }
     if (typeof bare === "undefined" || !bare.createBareClient) {
       console.warn("NovaDesk: bare-client missing");
       return;
     }
+
+    try {
+      const { ScramjetController } = $scramjetLoadController();
+      const ctl = new ScramjetController({
+        prefix: "/a/sj/",
+        files: {
+          wasm: "/assets/scramjet/scramjet.wasm",
+          all: "/assets/scramjet/scramjet.all.js",
+          sync: "/assets/scramjet/scramjet.all.js",
+        },
+        flags: {
+          serviceworkers: true,
+          syncxhr: false,
+          strictRewrites: true,
+          rewriterLogs: false,
+          captureErrors: true,
+          cleanErrors: true,
+          scramitize: false,
+          sourcemaps: true,
+          destructureRewrites: false,
+          interceptDownloads: false,
+          allowInvalidJs: true,
+          allowFailedIntercepts: true,
+        },
+      });
+      await ctl.init();
+      globalThis.__scramjetNovaDesk = ctl;
+    } catch (e) {
+      console.error("NovaDesk: ScramjetController init failed:", e);
+      return;
+    }
+
     try {
       const bareUrl = new URL("/ca/", location.origin).href;
       const bareClient = await bare.createBareClient(bareUrl);
+      const conn = new BareMux.BareMuxConnection("/assets/bare-mux/worker.js");
       const empty = bare.statusEmpty || [204, 304, 101];
       const transport = {
-        ready: false,
-        async init() {
-          this.ready = true;
-        },
+        ready: true,
+        async init() {},
         async meta() {},
         async request(remote, method, body, headers, signal) {
           const url = remote instanceof URL ? remote : new URL(String(remote));
@@ -41,10 +76,9 @@
             body: buf,
           };
         },
-        connect(remote, _origin, protocols, requestHeaders, onopen, onmessage, onclose, onerror) {
+        connect(remote, protocols, requestHeaders, onopen, onmessage, onclose, onerror) {
           try {
-            const url = remote instanceof URL ? remote : new URL(String(remote));
-            const ws = bareClient.createWebSocket(url, protocols, {
+            const ws = bareClient.createWebSocket(remote, protocols, {
               headers: requestHeaders,
             });
             ws.addEventListener("open", () => onopen(ws.protocol || ""));
@@ -68,9 +102,9 @@
           }
         },
       };
-      await BareMux.SetSingletonTransport(transport);
+      await conn.setRemoteTransport(transport, []);
     } catch (e) {
-      console.error("NovaDesk: Scramjet BareMux bootstrap failed:", e);
+      console.error("NovaDesk: Scramjet BareMux transport failed:", e);
     }
   }
 

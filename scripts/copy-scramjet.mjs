@@ -7,52 +7,76 @@ const root = path.join(__dirname, "..");
 const dest = path.join(root, "static", "assets", "scramjet");
 const bareDest = path.join(root, "static", "assets", "bare-mux");
 
-const scramjetPkg = path.join(root, "node_modules", "@mercuryworkshop", "scramjet", "dist");
+/** Pinned alpha (npm enforces `only-allow pnpm` on this package; we fetch from the registry CDN). */
+const SCRAMJET_VERSION = "2.0.2-alpha";
+const UNPKG = `https://unpkg.com/@mercuryworkshop/scramjet@${SCRAMJET_VERSION}/dist`;
 
-function bareMuxV1BareCjsPath() {
-  const nested = path.join(
-    root,
-    "node_modules",
-    "@mercuryworkshop",
-    "scramjet",
-    "node_modules",
-    "@mercuryworkshop",
-    "bare-mux",
-    "dist",
-    "bare.cjs",
-  );
-  if (fs.existsSync(nested)) {
-    return nested;
+const V1_ORphans = [
+  "scramjet.codecs.js",
+  "scramjet.bundle.js",
+  "scramjet.worker.js",
+  "scramjet.client.js",
+  "scramjet-nv-config.js",
+];
+const BARE_MUX_ORPHANS = ["uuid-shim.js", "bare-mux-v1.cjs"];
+
+async function download(url, filePath) {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`GET ${url} -> ${res.status} ${res.statusText}`);
   }
-  const pnpmDir = path.join(root, "node_modules", ".pnpm");
-  if (fs.existsSync(pnpmDir)) {
-    for (const name of fs.readdirSync(pnpmDir)) {
-      if (name.startsWith("@mercuryworkshop+bare-mux@1.")) {
-        const p = path.join(pnpmDir, name, "node_modules", "@mercuryworkshop", "bare-mux", "dist", "bare.cjs");
-        if (fs.existsSync(p)) {
-          return p;
-        }
-      }
+  const buf = Buffer.from(await res.arrayBuffer());
+  fs.writeFileSync(filePath, buf);
+}
+
+function copyBareMuxV2() {
+  const bareMuxRoot = path.join(root, "node_modules", "@mercuryworkshop", "bare-mux", "dist");
+  if (!fs.existsSync(path.join(bareMuxRoot, "index.js"))) {
+    throw new Error("Missing @mercuryworkshop/bare-mux in node_modules. Run npm install.");
+  }
+  for (const f of ["worker.js", "index.js"]) {
+    fs.copyFileSync(path.join(bareMuxRoot, f), path.join(bareDest, f));
+  }
+}
+
+function copyBareClient() {
+  const bareClientSrc = path.join(root, "node_modules", "@tomphttp", "bare-client", "dist", "bare.cjs");
+  const bareClientDest = path.join(root, "static", "assets", "bare-client");
+  fs.mkdirSync(bareClientDest, { recursive: true });
+  fs.copyFileSync(bareClientSrc, path.join(bareClientDest, "bare.cjs"));
+}
+
+async function main() {
+  fs.mkdirSync(dest, { recursive: true });
+  fs.mkdirSync(bareDest, { recursive: true });
+
+  for (const f of V1_ORphans) {
+    try {
+      fs.unlinkSync(path.join(dest, f));
+    } catch {
+      /* ignore */
     }
   }
-  throw new Error(
-    "Could not find Scramjet's bare-mux v1 bare.cjs (npm may have moved paths). Run npm install and retry.",
-  );
+  for (const f of BARE_MUX_ORPHANS) {
+    try {
+      fs.unlinkSync(path.join(bareDest, f));
+    } catch {
+      /* ignore */
+    }
+  }
+
+  await download(`${UNPKG}/scramjet.js`, path.join(dest, "scramjet.all.js"));
+  await download(`${UNPKG}/scramjet.wasm`, path.join(dest, "scramjet.wasm"));
+  await download(`${UNPKG}/a68dd7a5344f1722.wasm`, path.join(dest, "a68dd7a5344f1722.wasm"));
+  await download(`${UNPKG}/c34a4f083a11eae2.wasm`, path.join(dest, "c34a4f083a11eae2.wasm"));
+
+  copyBareMuxV2();
+  copyBareClient();
+
+  console.log(`Fetched Scramjet v2 (${SCRAMJET_VERSION}), copied bare-mux v2 + bare-client.`);
 }
 
-fs.mkdirSync(dest, { recursive: true });
-fs.mkdirSync(bareDest, { recursive: true });
-
-for (const f of ["scramjet.codecs.js", "scramjet.bundle.js", "scramjet.worker.js", "scramjet.client.js"]) {
-  fs.copyFileSync(path.join(scramjetPkg, f), path.join(dest, f));
-}
-
-/** Scramjet's worker bundles bare-mux v1; v2 SharedWorker transport never reaches the SW (see "there are no bare clients"). */
-fs.copyFileSync(bareMuxV1BareCjsPath(), path.join(bareDest, "bare-mux-v1.cjs"));
-
-const bareClientSrc = path.join(root, "node_modules", "@tomphttp", "bare-client", "dist", "bare.cjs");
-const bareClientDest = path.join(root, "static", "assets", "bare-client");
-fs.mkdirSync(bareClientDest, { recursive: true });
-fs.copyFileSync(bareClientSrc, path.join(bareClientDest, "bare.cjs"));
-
-console.log("Copied Scramjet, BareMux, and bare-client into static/assets/");
+main().catch(e => {
+  console.error(e);
+  process.exit(1);
+});

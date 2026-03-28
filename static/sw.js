@@ -2,20 +2,19 @@ importScripts("/assets/history/config.js?v=2025-04-15");
 importScripts("/assets/history/worker.js?v=2025-04-15");
 importScripts("/assets/mathematics/bundle.js?v=2025-04-15");
 importScripts("/assets/mathematics/config.js?v=2025-04-15");
-importScripts("/assets/scramjet/scramjet.codecs.js?v=1.0.2");
-importScripts("/assets/scramjet/scramjet-nv-config.js?v=1");
-importScripts("/assets/scramjet/scramjet.bundle.js?v=1.0.2");
-importScripts("/assets/scramjet/scramjet.worker.js?v=1.0.2");
+importScripts("/assets/scramjet/scramjet.all.js?v=2.0.2-alpha");
 importScripts(__uv$config.sw || "/assets/mathematics/sw.js?v=9-30-2024");
 
 const uv = new UVServiceWorker();
 const dynamic = new Dynamic();
+const { ScramjetServiceWorker } = $scramjetLoadWorker();
 const sjSw = new ScramjetServiceWorker();
 
 self.addEventListener("fetch", event => {
   event.respondWith(
     (async () => {
-      if (sjSw.route(event)) {
+      await sjSw.loadConfig();
+      if (sjSw.config && sjSw.route(event)) {
         return sjSw.fetch(event);
       }
       if (await dynamic.route(event)) {
