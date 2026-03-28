@@ -17,6 +17,8 @@
   "author": "NovaDesk",
   "license": "GPL-3.0-or-later",
   "dependencies": {
+    "@mercuryworkshop/bare-mux": "^2.1.8",
+    "@mercuryworkshop/scramjet": "^1.0.2",
     "@nebula-services/bare-server-node": "^2.0.4",
     "chalk": "^5.4.1",
     "cookie-parser": "^1.4.7",
