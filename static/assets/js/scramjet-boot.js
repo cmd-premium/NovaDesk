@@ -3,8 +3,8 @@
     if (typeof getProxyMode !== "function" || getProxyMode() !== "sj") {
       return;
     }
-    if (typeof BareMux === "undefined" || !BareMux.BareMuxConnection) {
-      console.warn("NovaDesk: BareMux missing; Scramjet needs /assets/bare-mux/index.js");
+    if (typeof BareMux === "undefined" || typeof BareMux.SetSingletonTransport !== "function") {
+      console.warn("NovaDesk: BareMux v1 missing; load /assets/bare-mux/uuid-shim.js then bare-mux-v1.cjs");
       return;
     }
     if (typeof bare === "undefined" || !bare.createBareClient) {
@@ -14,11 +14,12 @@
     try {
       const bareUrl = new URL("/ca/", location.origin).href;
       const bareClient = await bare.createBareClient(bareUrl);
-      const conn = new BareMux.BareMuxConnection("/assets/bare-mux/worker.js");
       const empty = bare.statusEmpty || [204, 304, 101];
       const transport = {
-        ready: true,
-        async init() {},
+        ready: false,
+        async init() {
+          this.ready = true;
+        },
         async meta() {},
         async request(remote, method, body, headers, signal) {
           const url = remote instanceof URL ? remote : new URL(String(remote));
@@ -40,9 +41,10 @@
             body: buf,
           };
         },
-        connect(remote, protocols, requestHeaders, onopen, onmessage, onclose, onerror) {
+        connect(remote, _origin, protocols, requestHeaders, onopen, onmessage, onclose, onerror) {
           try {
-            const ws = bareClient.createWebSocket(remote, protocols, {
+            const url = remote instanceof URL ? remote : new URL(String(remote));
+            const ws = bareClient.createWebSocket(url, protocols, {
               headers: requestHeaders,
             });
             ws.addEventListener("open", () => onopen(ws.protocol || ""));
@@ -66,7 +68,7 @@
           }
         },
       };
-      await conn.setRemoteTransport(transport, []);
+      await BareMux.SetSingletonTransport(transport);
     } catch (e) {
       console.error("NovaDesk: Scramjet BareMux bootstrap failed:", e);
     }
