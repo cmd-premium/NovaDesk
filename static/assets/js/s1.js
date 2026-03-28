@@ -72,7 +72,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const proxy = localStorage.getItem("proxy");
     if (proxy === "sj") {
       pChangeElement.value = "sj";
-    } else if (proxy === "dy" || localStorage.getItem("dy") === "true" || localStorage.getItem("dy") === "auto") {
+    } else if (proxy === "dy") {
+      pChangeElement.value = "dy";
+    } else if (localStorage.getItem("dy") === "true" || localStorage.getItem("dy") === "auto") {
       pChangeElement.value = "dy";
     } else {
       pChangeElement.value = "uv";
