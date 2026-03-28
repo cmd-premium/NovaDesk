@@ -47,11 +47,17 @@ document.addEventListener("DOMContentLoaded", () => {
 document.addEventListener("DOMContentLoaded", () => {
   function pChange(selectedValue) {
     if (selectedValue === "uv") {
+      localStorage.setItem("proxy", "uv");
       localStorage.setItem("uv", "true");
       localStorage.setItem("dy", "false");
     } else if (selectedValue === "dy") {
+      localStorage.setItem("proxy", "dy");
       localStorage.setItem("uv", "false");
       localStorage.setItem("dy", "true");
+    } else if (selectedValue === "sj") {
+      localStorage.setItem("proxy", "sj");
+      localStorage.setItem("uv", "false");
+      localStorage.setItem("dy", "false");
     }
   }
 
@@ -63,10 +69,10 @@ document.addEventListener("DOMContentLoaded", () => {
       pChange(selectedOption);
     });
 
-    const storedP = localStorage.getItem("uv");
-    if (storedP === "true") {
-      pChangeElement.value = "uv";
-    } else if (localStorage.getItem("dy") === "true" || localStorage.getItem("dy") === "auto") {
+    const proxy = localStorage.getItem("proxy");
+    if (proxy === "sj") {
+      pChangeElement.value = "sj";
+    } else if (proxy === "dy" || localStorage.getItem("dy") === "true" || localStorage.getItem("dy") === "auto") {
       pChangeElement.value = "dy";
     } else {
       pChangeElement.value = "uv";

@@ -23,6 +23,21 @@ function prependHttps(url) {
   return url;
 }
 
+/** Proxy path prefix for a target URL (xprime always uses /a/q/ unless Scramjet). */
+function resolveProxyPrefixForTarget(urlString) {
+  let xprime = false;
+  try {
+    xprime = /(^|\.)xprime\.su$/i.test(new URL(urlString).hostname);
+  } catch {
+    xprime = /xprime\.su/i.test(urlString);
+  }
+  const mode = getProxyMode();
+  if (xprime) {
+    return mode === "sj" ? "/a/sj/" : "/a/q/";
+  }
+  return getProxyPathPrefix();
+}
+
 /** SPAs often read viewport size once; iframes get final width after layout. Nudge resize so sites recalc (fixes “zoomed”/wrong scale). */
 function requestIframeLayoutFix(contentWindow) {
   if (!contentWindow) {
@@ -55,7 +70,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const formValue = input.value.trim();
         const searchBase = getSearchUrl();
         const url = isUrl(formValue) ? prependHttps(formValue) : `${searchBase}${formValue}`;
-        const enc = __uv$config.encodeUrl(url);
+        const enc = encodeProxyTarget(url);
         sessionStorage.setItem("GoUrl", enc);
         sessionStorage.setItem("GoUrlHint", url);
         const iframeContainer = document.getElementById("frame-container");
@@ -63,14 +78,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!activeIframe) {
           return;
         }
-        let xprime = false;
-        try {
-          xprime = /(^|\.)xprime\.su$/i.test(new URL(url).hostname);
-        } catch {
-          xprime = /xprime\.su/i.test(url);
-        }
-        const dyn = localStorage.getItem("dy") === "true" || xprime;
-        activeIframe.src = dyn ? `/a/q/${enc}` : `/a/${enc}`;
+        const prefix = resolveProxyPrefixForTarget(url);
+        activeIframe.src = `${prefix}${enc}`;
         activeIframe.dataset.tabUrl = url;
         input.value = url;
       });
@@ -104,14 +113,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           newSrc = `${window.location.origin}${goUrl}`;
         } else {
           const hint = sessionStorage.getItem("GoUrlHint") || "";
-          let xprime = false;
-          try {
-            xprime = /(^|\.)xprime\.su$/i.test(new URL(hint).hostname);
-          } catch {
-            xprime = /xprime\.su/i.test(hint);
-          }
-          const dyn = localStorage.getItem("dy") === "true" || xprime;
-          newSrc = `${window.location.origin}/${dyn ? "a/q" : "a"}/${goUrl}`;
+          const prefix = resolveProxyPrefixForTarget(hint).replace(/^\/+|\/+$/g, "");
+          newSrc = `${window.location.origin}/${prefix}/${goUrl}`;
         }
       }
     } else {
@@ -180,15 +183,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (newIframe.contentWindow) {
           newIframe.contentWindow.open = url => {
             const u = typeof url === "string" ? url : "";
-            const enc = __uv$config.encodeUrl(u);
-            let xprime = false;
-            try {
-              xprime = /(^|\.)xprime\.su$/i.test(new URL(u).hostname);
-            } catch {
-              xprime = /xprime\.su/i.test(u);
-            }
-            const dyn = localStorage.getItem("dy") === "true" || xprime;
-            sessionStorage.setItem("URL", `${dyn ? "/a/q/" : "/a/"}${enc}`);
+            const enc = encodeProxyTarget(u);
+            const prefix = resolveProxyPrefixForTarget(u);
+            sessionStorage.setItem("URL", `${prefix}${enc}`);
             if (u) {
               sessionStorage.setItem("GoUrlHint", u);
             }
