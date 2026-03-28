@@ -1,5 +1,5 @@
 // index.js — home search / navigation
-const UV_SW_URL = "../sw.js?v=2025-04-15";
+const UV_SW_URL = "../sw.js?v=2026-03-27-sj";
 const UV_SW_SCOPE = { scope: "/a/" };
 
 let uvSwReady = Promise.resolve();
