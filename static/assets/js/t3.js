@@ -23,21 +23,6 @@ function prependHttps(url) {
   return url;
 }
 
-/** Proxy path prefix for a target URL (xprime always uses /a/q/ unless Scramjet). */
-function resolveProxyPrefixForTarget(urlString) {
-  let xprime = false;
-  try {
-    xprime = /(^|\.)xprime\.su$/i.test(new URL(urlString).hostname);
-  } catch {
-    xprime = /xprime\.su/i.test(urlString);
-  }
-  const mode = getProxyMode();
-  if (xprime) {
-    return mode === "sj" ? "/a/sj/" : "/a/q/";
-  }
-  return getProxyPathPrefix();
-}
-
 /** SPAs often read viewport size once; iframes get final width after layout. Nudge resize so sites recalc (fixes “zoomed”/wrong scale). */
 function requestIframeLayoutFix(contentWindow) {
   if (!contentWindow) {
