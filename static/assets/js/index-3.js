@@ -1,6 +1,6 @@
 // index.js — home search / navigation
-const UV_SW_URL = "../sw.js?v=2026-03-28";
-const UV_SW_SCOPE = { scope: "/a/" };
+const UV_SW_URL = "../sw.js?v=2026-03-29";
+const UV_SW_SCOPE = { scope: "/" };
 
 let uvSwReady = Promise.resolve();
 if ("serviceWorker" in navigator) {
