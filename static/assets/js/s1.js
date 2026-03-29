@@ -443,50 +443,58 @@ function importSaveData() {
 
 const WAVES_URL_STORAGE = "wavesProdUrl";
 
+function normalizeWavesUrl(raw) {
+  let u = String(raw || "").trim();
+  if (!u) return "";
+  if (!/^https?:\/\//i.test(u)) u = `http://${u}`;
+  try {
+    return new URL(u).href;
+  } catch {
+    return "";
+  }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
-  const openBtn = document.getElementById("waves-prod-open");
-  const saveBtn = document.getElementById("waves-prod-save-url");
-  const overrideInput = document.getElementById("waves-prod-url-override");
-  if (!openBtn || !overrideInput) {
+  const switchBtn = document.getElementById("waves-switch");
+  const overrideInput = document.getElementById("waves-url-override");
+  if (!switchBtn) {
     return;
   }
 
-  let serverDefault = "http://127.0.0.1:3000";
+  let serverWavesUrl = `${window.location.protocol}//${window.location.hostname}:3000/`;
   try {
-    const r = await fetch("/api/novadesk-meta");
+    const r = await fetch("/api/novadesk-meta", { credentials: "same-origin" });
     if (r.ok) {
       const j = await r.json();
-      if (typeof j.wavesProdUrl === "string" && j.wavesProdUrl.length > 0) {
-        serverDefault = j.wavesProdUrl;
+      const candidate = j.wavesUrl ?? j.wavesProdUrl;
+      if (typeof candidate === "string" && candidate.length > 0) {
+        const n = normalizeWavesUrl(candidate);
+        if (n) serverWavesUrl = n;
       }
     }
   } catch {
-    /* use default */
+    /* hostname:3000 fallback */
   }
 
   const stored = localStorage.getItem(WAVES_URL_STORAGE);
-  if (stored) {
+  if (stored && overrideInput) {
     overrideInput.value = stored;
   }
 
-  saveBtn?.addEventListener("click", () => {
-    const v = overrideInput.value.trim();
-    if (!v) {
-      localStorage.removeItem(WAVES_URL_STORAGE);
-    } else {
-      try {
-        new URL(v);
-        localStorage.setItem(WAVES_URL_STORAGE, v);
-      } catch {
-        alert("Enter a valid URL (e.g. http://127.0.0.1:3000)");
+  switchBtn.addEventListener("click", () => {
+    const manual = overrideInput?.value.trim();
+    let target = "";
+    if (manual) {
+      target = normalizeWavesUrl(manual);
+      if (!target) {
+        alert("Enter a valid Waves URL (e.g. http://127.0.0.1:3000/)");
         return;
       }
+      localStorage.setItem(WAVES_URL_STORAGE, target);
+    } else {
+      localStorage.removeItem(WAVES_URL_STORAGE);
+      target = serverWavesUrl;
     }
-  });
-
-  openBtn.addEventListener("click", () => {
-    const custom = localStorage.getItem(WAVES_URL_STORAGE);
-    const target = custom && custom.length > 0 ? custom : serverDefault;
-    window.location.href = target;
+    window.location.replace(target);
   });
 });

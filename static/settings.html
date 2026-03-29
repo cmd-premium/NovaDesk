@@ -186,18 +186,15 @@
         </select>
       </div>
       <div class="settings-card">
-        <h3>Waves (waves-prod)</h3>
+        <h3>Switch to Waves</h3>
         <p>
-          Open the Waves UI served from the <code>waves-prod</code> folder on this same server at
-          <code>/waves/</code>. Set <code>WAVES_PROD_URL</code> only if you want the button to open an external
-          instance instead.
+          Leave NovaDesk and open <strong>Waves</strong> (the <code>waves-prod</code> app). Run
+          <code>npm start</code> in <code>waves-prod</code> (port <strong>3000</strong> by default). The button uses
+          the same host as this page with port 3000, or set <code>WAVES_URL</code> on the NovaDesk server.
         </p>
-        <input class="key-form" type="url" id="waves-prod-url-override"
-          placeholder="Custom Waves URL (optional)" autocomplete="off" />
-        <div id="buttonLayer">
-          <button type="button" class="key-button" id="waves-prod-save-url">Save custom URL</button>
-          <button type="button" class="key-button" id="waves-prod-open">Open Waves</button>
-        </div>
+        <input class="key-form" type="url" id="waves-url-override"
+          placeholder="Override Waves URL only if needed" autocomplete="off" />
+        <button type="button" class="key-button" id="waves-switch">Switch to Waves</button>
       </div>
       <div class="settings-card">
         <h3>Particles</h3>
