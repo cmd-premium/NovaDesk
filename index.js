@@ -106,6 +106,12 @@ app.use(
 );
 app.use("/ca", cors({ origin: true }));
 
+app.get("/api/novadesk-meta", (_req, res) => {
+  res.json({
+    wavesProdUrl: process.env.WAVES_PROD_URL || "http://127.0.0.1:3000",
+  });
+});
+
 const routes = [
   { path: "/b", file: "apps.html" },
   { path: "/a", file: "games.html" },

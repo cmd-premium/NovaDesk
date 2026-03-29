@@ -186,6 +186,20 @@
         </select>
       </div>
       <div class="settings-card">
+        <h3>Waves (waves-prod)</h3>
+        <p>
+          Open the alternate interface from the <code>waves-prod</code> folder
+          (run its server separately, default <code>http://127.0.0.1:3000</code>).
+          Override with env <code>WAVES_PROD_URL</code> on NovaDesk, or save a custom URL below.
+        </p>
+        <input class="key-form" type="url" id="waves-prod-url-override"
+          placeholder="Custom Waves URL (optional)" autocomplete="off" />
+        <div id="buttonLayer">
+          <button type="button" class="key-button" id="waves-prod-save-url">Save custom URL</button>
+          <button type="button" class="key-button" id="waves-prod-open">Open Waves</button>
+        </div>
+      </div>
+      <div class="settings-card">
         <h3>Particles</h3>
         <p>
           Add the particles that are from the previous version to the new

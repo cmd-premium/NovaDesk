@@ -440,3 +440,53 @@ function importSaveData() {
   };
   input.click();
 }
+
+const WAVES_URL_STORAGE = "wavesProdUrl";
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const openBtn = document.getElementById("waves-prod-open");
+  const saveBtn = document.getElementById("waves-prod-save-url");
+  const overrideInput = document.getElementById("waves-prod-url-override");
+  if (!openBtn || !overrideInput) {
+    return;
+  }
+
+  let serverDefault = "http://127.0.0.1:3000";
+  try {
+    const r = await fetch("/api/novadesk-meta");
+    if (r.ok) {
+      const j = await r.json();
+      if (typeof j.wavesProdUrl === "string" && j.wavesProdUrl.length > 0) {
+        serverDefault = j.wavesProdUrl;
+      }
+    }
+  } catch {
+    /* use default */
+  }
+
+  const stored = localStorage.getItem(WAVES_URL_STORAGE);
+  if (stored) {
+    overrideInput.value = stored;
+  }
+
+  saveBtn?.addEventListener("click", () => {
+    const v = overrideInput.value.trim();
+    if (!v) {
+      localStorage.removeItem(WAVES_URL_STORAGE);
+    } else {
+      try {
+        new URL(v);
+        localStorage.setItem(WAVES_URL_STORAGE, v);
+      } catch {
+        alert("Enter a valid URL (e.g. http://127.0.0.1:3000)");
+        return;
+      }
+    }
+  });
+
+  openBtn.addEventListener("click", () => {
+    const custom = localStorage.getItem(WAVES_URL_STORAGE);
+    const target = custom && custom.length > 0 ? custom : serverDefault;
+    window.location.href = target;
+  });
+});
