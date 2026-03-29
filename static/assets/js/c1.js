@@ -1,7 +1,7 @@
 // cloak.js
 let appInd;
 const g = window.location.pathname === "/a";
-const a = window.location.pathname === "/b";
+const a = window.location.pathname === "/apps";
 const c = window.location.pathname === "/gt";
 
 let t;

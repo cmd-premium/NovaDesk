@@ -1,13 +1,17 @@
+import { novadeskWavesBase, wavesUrl } from "./novadesk-base.js";
+
+const __nwMount = novadeskWavesBase();
+
 try {
   if (localStorage.getItem('backend') !== 'ultraviolet' && typeof window['$scramjetLoadController'] === 'function') {
     const controllerFactory = window['$scramjetLoadController']();
     const ScramjetControllerRef = controllerFactory['ScramjetController'];
     const scramjet = new ScramjetControllerRef({
-      prefix: "/b/s/",
+      prefix: `${__nwMount}/b/s/`,
       files: {
-        wasm: "/b/s/jetty.wasm.wasm",
-        all: "/b/s/jetty.all.js",
-        sync: "/b/s/jetty.sync.js"
+        wasm: `${__nwMount}/b/s/jetty.wasm.wasm`,
+        all: `${__nwMount}/b/s/jetty.all.js`,
+        sync: `${__nwMount}/b/s/jetty.sync.js`
       },
       flags: {
         rewriterLogs: true
@@ -261,7 +265,7 @@ export function initializeLoad() {
     },
     async checkVersion() {
       try {
-        const res = await fetch("/api/stuff", { cache: "no-store" });
+        const res = await fetch(wavesUrl("/api/stuff"), { cache: "no-store" });
         if (!res.ok) return;
         const { version } = await res.json();
         const prev = localStorage.getItem("wavesVersion");

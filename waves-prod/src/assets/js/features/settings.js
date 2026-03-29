@@ -1,3 +1,9 @@
+function __nwWavesBase() {
+    return typeof window !== 'undefined' && window.__NOVADESK_WAVES_BASE__
+        ? window.__NOVADESK_WAVES_BASE__
+        : '';
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     function openDB(dbName) {
         return new Promise((resolve, reject) => {
@@ -1056,7 +1062,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         };
 
-        fetch('/api/stuff', {
+        fetch(`${__nwWavesBase()}/api/stuff`, {
             cache: 'no-store'
         })
             .then(res => res.ok ? res.json() : null)

@@ -1,4 +1,10 @@
 ; (function () {
+  function nwBase() {
+    return typeof window !== "undefined" && window.__NOVADESK_WAVES_BASE__
+      ? window.__NOVADESK_WAVES_BASE__
+      : "";
+  }
+
   const STATES = Object.freeze({
     IDLE: 'IDLE',
     CONNECTING: 'CONNECTING',
@@ -163,7 +169,11 @@
     async _reapplyTransport() {
       if (!this.bareMuxConnection) return false;
       try {
-        const transportMap = { epoxy: "/epoxy/index.mjs", libcurl: "/libcurl/index.mjs" };
+        const b = nwBase();
+        const transportMap = {
+          epoxy: `${b}/epoxy/index.mjs`,
+          libcurl: `${b}/libcurl/index.mjs`,
+        };
         const transportModule = transportMap[this.appConfig.transport];
         if (!transportModule) return false;
 
@@ -190,15 +200,20 @@
       if (!isRetry) this.updateStatus('connecting...', 'info');
 
       try {
+        const b = nwBase();
         if (!this.bareMuxConnection) {
-          this.bareMuxConnection = new BareMux.BareMuxConnection("/bmux/worker.js");
+          this.bareMuxConnection = new BareMux.BareMuxConnection(`${b}/bmux/worker.js`);
           window.WavesApp.bareMuxConnection = this.bareMuxConnection;
         }
 
         const defaultWispUrl = `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/w/`;
         this.currentWispUrl = defaultWispUrl;
 
-        const scope = { 'ultraviolet': "/b/u/hi/", 'scramjet': "/b/s/" }[this.appConfig.backend];
+        const scopeMap = {
+          ultraviolet: `${b}/b/u/hi/`,
+          scramjet: `${b}/b/s/`,
+        };
+        const scope = scopeMap[this.appConfig.backend];
         if (!scope) throw new Error(`unknown backend: ${this.appConfig.backend}`);
 
         const registration = await navigator.serviceWorker.register("./b/sw.js", { scope });
@@ -211,7 +226,10 @@
           });
         }
 
-        const transportMap = { epoxy: "/epoxy/index.mjs", libcurl: "/libcurl/index.mjs" };
+        const transportMap = {
+          epoxy: `${b}/epoxy/index.mjs`,
+          libcurl: `${b}/libcurl/index.mjs`,
+        };
         const transportModule = transportMap[this.appConfig.transport];
         if (!transportModule) throw new Error(`unknown transport: ${this.appConfig.transport}`);
 

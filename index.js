@@ -11,6 +11,8 @@ import mime from "mime";
 import fetch from "node-fetch";
 // import { setupMasqr } from "./Masqr.js";
 import config from "./config.js";
+import wisp from "wisp-server-node";
+import { createWavesRouter, WAVES_MOUNT_PATH } from "./lib/waves-routes.mjs";
 
 console.log(chalk.yellow("🚀 Starting server..."));
 
@@ -107,13 +109,26 @@ app.use(
 app.use("/ca", cors({ origin: true }));
 
 app.get("/api/novadesk-meta", (_req, res) => {
+  const external = process.env.WAVES_PROD_URL;
   res.json({
-    wavesProdUrl: process.env.WAVES_PROD_URL || "http://127.0.0.1:3000",
+    wavesProdUrl: external && external.length > 0 ? external : `${WAVES_MOUNT_PATH}/`,
   });
 });
 
+app.get("/waves", (_req, res) => res.redirect(302, `${WAVES_MOUNT_PATH}/`));
+
+/** Former apps page was /b; Waves uses /waves/b for bundles. */
+app.get("/b", (req, res) => {
+  if (Object.keys(req.query).length > 0) {
+    return res.redirect(302, `${WAVES_MOUNT_PATH}/b?${new URLSearchParams(req.query).toString()}`);
+  }
+  res.redirect(302, "/apps");
+});
+
+app.use(WAVES_MOUNT_PATH, createWavesRouter());
+
 const routes = [
-  { path: "/b", file: "apps.html" },
+  { path: "/apps", file: "apps.html" },
   { path: "/a", file: "games.html" },
   { path: "/play.html", file: "games.html" },
   { path: "/c", file: "settings.html" },
@@ -148,6 +163,9 @@ server.on("request", (req, res) => {
 server.on("upgrade", (req, socket, head) => {
   if (bareServer.shouldRoute(req)) {
     bareServer.routeUpgrade(req, socket, head);
+  } else if (req.url?.startsWith("/w/")) {
+    socket.setNoDelay(true);
+    wisp.routeRequest(req, socket, head);
   } else {
     socket.end();
   }

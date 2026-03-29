@@ -1,4 +1,5 @@
 import { dom } from '../ui/dom.js';
+import { wavesUrl } from '../core/novadesk-base.js';
 
 let notificationsCache = [];
 let notificationsMenuEl = null;
@@ -31,7 +32,7 @@ function loadNotifications() {
 
 async function fetchNotifications() {
     try {
-        const response = await fetch('/api/notifications', { cache: 'no-store' });
+        const response = await fetch(wavesUrl('/api/notifications'), { cache: 'no-store' });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }

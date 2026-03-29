@@ -1,3 +1,5 @@
+import { wavesUrl } from '../core/novadesk-base.js';
+
 const LOADING_SCREEN = `
     <div id="loading-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 99999; display: flex; justify-content: center; align-items: center; color: #858585; font-family: 'Lexend', sans-serif;">
         <h1 style="margin: 0; font-size: 1.2rem; font-weight: 300;">syncing data...</h1>
@@ -41,8 +43,8 @@ export class CloudSync {
 
         try {
             const [authRes, metaRes] = await Promise.all([
-                fetchWithTimeout('/api/auth/me', { cache: 'no-store' }),
-                fetchWithTimeout('/api/sync/meta', { cache: 'no-store' })
+                fetchWithTimeout(wavesUrl('/api/auth/me'), { cache: 'no-store' }),
+                fetchWithTimeout(wavesUrl('/api/sync/meta'), { cache: 'no-store' })
             ]);
 
             if (authRes.ok) {
@@ -90,7 +92,7 @@ export class CloudSync {
     async sync() {
         try {
             if (!this.isAuthenticated) return;
-            const metaRes = await fetchWithTimeout('/api/sync/meta', { cache: 'no-store' });
+            const metaRes = await fetchWithTimeout(wavesUrl('/api/sync/meta'), { cache: 'no-store' });
             if (!metaRes.ok) return;
 
             const metaData = await metaRes.json();
@@ -125,7 +127,7 @@ export class CloudSync {
 
     async checkAuthStatus() {
         try {
-            const res = await fetchWithTimeout('/api/auth/me', { cache: 'no-store' });
+            const res = await fetchWithTimeout(wavesUrl('/api/auth/me'), { cache: 'no-store' });
             if (res.ok) {
                 const data = await res.json();
                 this.user = data.user;
@@ -473,7 +475,7 @@ export class CloudSync {
         if (window.showToast) toastController = window.showToast('info', 'logging in...', 'right-to-bracket', 0);
 
         try {
-            const res = await fetch('/api/auth/login', {
+            const res = await fetch(wavesUrl('/api/auth/login'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -570,7 +572,7 @@ export class CloudSync {
 
     async performLogout() {
         try {
-            await fetch('/api/auth/logout', { method: 'POST' });
+            await fetch(wavesUrl('/api/auth/logout'), { method: 'POST' });
         } catch (e) {
             console.warn("server logout failed!", e);
         }
@@ -738,7 +740,7 @@ export class CloudSync {
 
             const data = await window.wavesExportAllData();
 
-            const res = await fetchWithTimeout('/api/sync/upload', {
+            const res = await fetchWithTimeout(wavesUrl('/api/sync/upload'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -799,7 +801,7 @@ export class CloudSync {
         }
 
         try {
-            const res = await fetchWithTimeout('/api/sync/download', {}, 15000);
+            const res = await fetchWithTimeout(wavesUrl('/api/sync/download'), {}, 15000);
 
             if (res.status === 429) {
                 if (!silent) this.updateStatus('too many requests', 'error');
