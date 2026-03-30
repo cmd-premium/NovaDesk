@@ -97,6 +97,53 @@
    margin-top: 0.5rem;
 }
 
+.home-quick-links {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 0.65rem;
+   justify-content: center;
+   align-items: center;
+   margin-top: 1.15rem;
+   width: 100%;
+}
+
+.home-quick-link {
+   display: inline-flex;
+   align-items: center;
+   gap: 0.45rem;
+   padding: 0.5em 1.15em;
+   font-family: "Outfit", "Poppins", "Inter", sans-serif;
+   font-size: clamp(0.85rem, 2.4vw, 0.95rem);
+   font-weight: 600;
+   letter-spacing: 0.04em;
+   text-decoration: none;
+   color: rgba(248, 250, 252, 0.92);
+   text-transform: lowercase;
+   border-radius: 999px;
+   background: rgba(8, 12, 22, 0.55);
+   border: 1px solid var(--border-subtle);
+   -webkit-backdrop-filter: blur(10px);
+   backdrop-filter: blur(10px);
+   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+   transition:
+      color 0.2s ease,
+      background 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.2s ease;
+}
+
+.home-quick-link i {
+   font-size: 0.9em;
+   opacity: 0.9;
+}
+
+.home-quick-link:hover {
+   color: #ecfeff;
+   background: rgba(45, 212, 191, 0.16);
+   border-color: rgba(94, 234, 212, 0.4);
+   transform: translateY(-2px);
+}
+
 .search-wrap {
    position: relative;
    width: min(92vw, 560px);
