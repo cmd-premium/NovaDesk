@@ -1,10 +1,13 @@
 // cloak.js
 let appInd;
 const pathnameBase = window.location.pathname.replace(/\/$/, "") || "/";
-const gLegacy = pathnameBase === "/a";
-const gUgs = pathnameBase === "/play.html";
+const pathParts = pathnameBase.split("/").filter(Boolean);
+const pathLast = pathParts[pathParts.length - 1] || "";
+// `/a` = legacy games; same when hosted under a prefix (`/site/a`). Skip UV game URLs (`/a/q/...`).
+const gLegacy = pathLast === "a" && !pathnameBase.includes("/a/q/");
+const gUgs = pathLast.toLowerCase() === "play.html";
 const g = gLegacy || gUgs;
-const a = pathnameBase === "/b";
+const a = pathLast === "b";
 const c = window.location.pathname === "/gt";
 
 if (!localStorage.getItem("GgamesSplitMigrated")) {
@@ -262,7 +265,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let path = "/assets/json/a.min.json";
 if (g) {
-  path = gLegacy ? "/assets/json/g-legacy.min.json?v=1" : "/assets/json/g.min.json?v=ugs";
+  path = gLegacy ? "/assets/json/g-legacy.min.json?v=2" : "/assets/json/g.min.json?v=ugs";
 } else if (c) {
   path = "/assets/json/t.min.json";
 } else if (a) {
