@@ -18,6 +18,14 @@
     "categories": ["all"]
   },
   {
+    "name": "Ultimate Game Stash (UGS)",
+    "link": "/allin1.html",
+    "image": "/assets/media/icons/custom.webp",
+    "categories": ["all"],
+    "local2": true,
+    "say": "Opens the Ultimate Game Stash browser (large list from UGS; loads scripts from jsDelivr). Use search or the load button if the list is slow."
+  },
+  {
     "name": "Fancade",
     "link": "https://play.fancade.com",
     "image": "/assets/media/icon/fancade.jpg",
