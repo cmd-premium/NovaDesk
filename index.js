@@ -106,20 +106,6 @@ app.use(
 );
 app.use("/ca", cors({ origin: true }));
 
-/**
- * Tells the settings UI where standalone Waves runs (waves-prod: `npm start`, default port 3000).
- * Override with env WAVES_URL, e.g. https://waves.example.com/
- */
-app.get("/api/novadesk-meta", (req, res) => {
-  const fromEnv = process.env.WAVES_URL?.trim();
-  if (fromEnv) {
-    return res.json({ wavesUrl: fromEnv });
-  }
-  const host = req.get("host")?.split(":")[0] || "127.0.0.1";
-  const scheme = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
-  res.json({ wavesUrl: `${scheme}://${host}:3000/` });
-});
-
 const routes = [
   { path: "/b", file: "apps.html" },
   { path: "/a", file: "games.html" },
