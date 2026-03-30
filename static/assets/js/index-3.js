@@ -1,5 +1,5 @@
 // index.js — home search / navigation
-const UV_SW_URL = "../sw.js?v=2026-03-31";
+const UV_SW_URL = "../sw.js?v=2026-04-02";
 const UV_SW_SCOPE = { scope: "/" };
 
 let uvSwReady = Promise.resolve();
@@ -74,24 +74,20 @@ async function processUrl(value, path) {
   sessionStorage.setItem("GoUrl", enc);
   sessionStorage.setItem("GoUrlHint", url);
   const dyOn = localStorage.getItem("dy") === "true";
-  let bcine = false;
+  let bcineUv = false;
   try {
-    bcine = /(^|\.)bcine\.app$/i.test(new URL(url).hostname);
+    bcineUv = /(^|\.)bcine\.app$/i.test(new URL(url).hostname);
   } catch {
-    bcine = /bcine\.app/i.test(url);
+    bcineUv = /bcine\.app/i.test(url);
   }
+  // bCine works reliably through UV, not Dynamic; still honor /d tab shell.
+  const useDynamic = dyOn && !bcineUv;
 
   // Dynamic preference (dy) must not skip /d — tabs always load first; iframes use /a/q/ when dy is on (see t3.js).
-  // bCine (bcine.app): full /a/q/ only when not using the tab shell (path !== "/d"; e.g. home embedded in an iframe).
-  if (bcine && path !== "/d") {
-    window.location.href = `/a/q/${enc}`;
-    return;
-  }
   if (path) {
     location.href = path;
   } else {
-    const dyn = dyOn || bcine;
-    window.location.href = dyn ? `/a/q/${enc}` : `/a/${enc}`;
+    window.location.href = useDynamic ? `/a/q/${enc}` : `/a/${enc}`;
   }
 }
 

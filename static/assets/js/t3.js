@@ -6,7 +6,7 @@ function getSearchUrl() {
 // Await registration only; `navigator.serviceWorker.ready` can hang and block tab setup.
 let uvSwReady = Promise.resolve();
 if ("serviceWorker" in navigator) {
-  uvSwReady = navigator.serviceWorker.register("../sw.js?v=2026-03-31", { scope: "/" }).catch(() => {});
+  uvSwReady = navigator.serviceWorker.register("../sw.js?v=2026-04-02", { scope: "/" }).catch(() => {});
 }
 
 function isUrl(val = "") {
@@ -60,13 +60,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!activeIframe) {
           return;
         }
-        let bcine = false;
+        let bcineUv = false;
         try {
-          bcine = /(^|\.)bcine\.app$/i.test(new URL(url).hostname);
+          bcineUv = /(^|\.)bcine\.app$/i.test(new URL(url).hostname);
         } catch {
-          bcine = /bcine\.app/i.test(url);
+          bcineUv = /bcine\.app/i.test(url);
         }
-        const dyn = localStorage.getItem("dy") === "true" || bcine;
+        const dyn = localStorage.getItem("dy") === "true" && !bcineUv;
         activeIframe.src = dyn ? `/a/q/${enc}` : `/a/${enc}`;
         activeIframe.dataset.tabUrl = url;
         input.value = url;
@@ -101,13 +101,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           newSrc = `${window.location.origin}${goUrl}`;
         } else {
           const hint = sessionStorage.getItem("GoUrlHint") || "";
-          let bcine = false;
+          let bcineUv = false;
           try {
-            bcine = /(^|\.)bcine\.app$/i.test(new URL(hint).hostname);
+            bcineUv = /(^|\.)bcine\.app$/i.test(new URL(hint).hostname);
           } catch {
-            bcine = /bcine\.app/i.test(hint);
+            bcineUv = /bcine\.app/i.test(hint);
           }
-          const dyn = localStorage.getItem("dy") === "true" || bcine;
+          const dyn = localStorage.getItem("dy") === "true" && !bcineUv;
           newSrc = `${window.location.origin}/${dyn ? "a/q" : "a"}/${goUrl}`;
         }
       }
@@ -178,13 +178,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           newIframe.contentWindow.open = url => {
             const u = typeof url === "string" ? url : "";
             const enc = __uv$config.encodeUrl(u);
-            let bcine = false;
+            let bcineUv = false;
             try {
-              bcine = /(^|\.)bcine\.app$/i.test(new URL(u).hostname);
+              bcineUv = /(^|\.)bcine\.app$/i.test(new URL(u).hostname);
             } catch {
-              bcine = /bcine\.app/i.test(u);
+              bcineUv = /bcine\.app/i.test(u);
             }
-            const dyn = localStorage.getItem("dy") === "true" || bcine;
+            const dyn = localStorage.getItem("dy") === "true" && !bcineUv;
             sessionStorage.setItem("URL", `${dyn ? "/a/q/" : "/a/"}${enc}`);
             if (u) {
               sessionStorage.setItem("GoUrlHint", u);
