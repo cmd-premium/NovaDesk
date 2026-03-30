@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
+/** Full UGS catalog for `/play.html`. Curated “old” games live in g-legacy.* (`npm run build:g-legacy`). */
 const G_JSON = path.join(ROOT, "static", "assets", "json", "g.json");
 const G_MIN = path.join(ROOT, "static", "assets", "json", "g.min.json");
 

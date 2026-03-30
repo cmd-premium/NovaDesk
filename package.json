@@ -13,7 +13,8 @@
     "lint": "biome lint --write .",
     "sync:github": "node scripts/auto-github-sync.mjs",
     "sync:github:once": "node scripts/auto-github-sync.mjs --once",
-    "build:ugs-games": "node scripts/build-ugs-games.mjs"
+    "build:ugs-games": "node scripts/build-ugs-games.mjs",
+    "build:g-legacy": "node scripts/build-g-legacy.mjs"
   },
   "author": "NovaDesk",
   "license": "GPL-3.0-or-later",

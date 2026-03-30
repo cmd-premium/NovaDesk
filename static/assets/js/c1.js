@@ -1,9 +1,31 @@
 // cloak.js
 let appInd;
 const pathnameBase = window.location.pathname.replace(/\/$/, "") || "/";
-const g = pathnameBase === "/a" || pathnameBase === "/play.html";
+const gLegacy = pathnameBase === "/a";
+const gUgs = pathnameBase === "/play.html";
+const g = gLegacy || gUgs;
 const a = pathnameBase === "/b";
 const c = window.location.pathname === "/gt";
+
+if (!localStorage.getItem("GgamesSplitMigrated")) {
+  const oldP = localStorage.getItem("Gpinned");
+  const oldC = localStorage.getItem("Gcustom");
+  if (oldP && !localStorage.getItem("GpinnedLegacy")) {
+    localStorage.setItem("GpinnedLegacy", oldP);
+  }
+  if (oldC && !localStorage.getItem("GcustomLegacy")) {
+    localStorage.setItem("GcustomLegacy", oldC);
+  }
+  localStorage.setItem("GgamesSplitMigrated", "1");
+}
+
+function gCustomKey() {
+  return gLegacy ? "GcustomLegacy" : "GcustomUgs";
+}
+
+function gPinnedKey() {
+  return gLegacy ? "GpinnedLegacy" : "GpinnedUgs";
+}
 
 let t;
 
@@ -87,7 +109,7 @@ function getSelected(links) {
 function CustomApp(customApp) {
   let apps;
   if (g) {
-    apps = localStorage.getItem("Gcustom");
+    apps = localStorage.getItem(gCustomKey());
   } else if (c) {
     apps = localStorage.getItem("Tcustom");
   } else if (a) {
@@ -105,7 +127,7 @@ function CustomApp(customApp) {
   apps[key] = customApp;
 
   if (g) {
-    localStorage.setItem("Gcustom", JSON.stringify(apps));
+    localStorage.setItem(gCustomKey(), JSON.stringify(apps));
   } else if (c) {
     localStorage.setItem("Tcustom", JSON.stringify(apps));
   } else if (a) {
@@ -116,7 +138,7 @@ function CustomApp(customApp) {
 function setPin(index) {
   let pins;
   if (g) {
-    pins = localStorage.getItem("Gpinned");
+    pins = localStorage.getItem(gPinnedKey());
   } else if (c) {
     pins = localStorage.getItem("Tpinned");
   } else if (a) {
@@ -135,7 +157,7 @@ function setPin(index) {
     pins.push(index);
   }
   if (g) {
-    localStorage.setItem("Gpinned", pins);
+    localStorage.setItem(gPinnedKey(), pins);
   } else if (c) {
     localStorage.setItem("Tpinned", pins);
   } else if (a) {
@@ -225,7 +247,7 @@ function CreateCustomApp(customApp) {
 document.addEventListener("DOMContentLoaded", () => {
   let storedApps;
   if (g) {
-    storedApps = JSON.parse(localStorage.getItem("Gcustom"));
+    storedApps = JSON.parse(localStorage.getItem(gCustomKey()));
   } else if (c) {
     storedApps = JSON.parse(localStorage.getItem("Tcustom"));
   } else if (a) {
@@ -240,7 +262,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let path = "/assets/json/a.min.json";
 if (g) {
-  path = "/assets/json/g.min.json?v=ugs";
+  path = gLegacy ? "/assets/json/g-legacy.min.json?v=1" : "/assets/json/g.min.json?v=ugs";
 } else if (c) {
   path = "/assets/json/t.min.json";
 } else if (a) {
@@ -264,7 +286,7 @@ fetch(path)
     const pinnedApps = document.querySelector(".pinned");
     let pinList;
     if (g) {
-      pinList = localStorage.getItem("Gpinned") || "";
+      pinList = localStorage.getItem(gPinnedKey()) || "";
     } else if (a) {
       pinList = localStorage.getItem("Apinned") || "";
     } else if (c) {
