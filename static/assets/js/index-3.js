@@ -74,23 +74,23 @@ async function processUrl(value, path) {
   sessionStorage.setItem("GoUrl", enc);
   sessionStorage.setItem("GoUrlHint", url);
   const dyOn = localStorage.getItem("dy") === "true";
-  let xprime = false;
+  let bcine = false;
   try {
-    xprime = /(^|\.)xprime\.su$/i.test(new URL(url).hostname);
+    bcine = /(^|\.)bcine\.app$/i.test(new URL(url).hostname);
   } catch {
-    xprime = /xprime\.su/i.test(url);
+    bcine = /bcine\.app/i.test(url);
   }
 
   // Dynamic preference (dy) must not skip /d — tabs always load first; iframes use /a/q/ when dy is on (see t3.js).
-  // XPrime: full /a/q/ only when not using the tab shell (path !== "/d"; e.g. home embedded in an iframe).
-  if (xprime && path !== "/d") {
+  // bCine (bcine.app): full /a/q/ only when not using the tab shell (path !== "/d"; e.g. home embedded in an iframe).
+  if (bcine && path !== "/d") {
     window.location.href = `/a/q/${enc}`;
     return;
   }
   if (path) {
     location.href = path;
   } else {
-    const dyn = dyOn || xprime;
+    const dyn = dyOn || bcine;
     window.location.href = dyn ? `/a/q/${enc}` : `/a/${enc}`;
   }
 }

@@ -60,13 +60,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!activeIframe) {
           return;
         }
-        let xprime = false;
+        let bcine = false;
         try {
-          xprime = /(^|\.)xprime\.su$/i.test(new URL(url).hostname);
+          bcine = /(^|\.)bcine\.app$/i.test(new URL(url).hostname);
         } catch {
-          xprime = /xprime\.su/i.test(url);
+          bcine = /bcine\.app/i.test(url);
         }
-        const dyn = localStorage.getItem("dy") === "true" || xprime;
+        const dyn = localStorage.getItem("dy") === "true" || bcine;
         activeIframe.src = dyn ? `/a/q/${enc}` : `/a/${enc}`;
         activeIframe.dataset.tabUrl = url;
         input.value = url;
@@ -101,13 +101,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           newSrc = `${window.location.origin}${goUrl}`;
         } else {
           const hint = sessionStorage.getItem("GoUrlHint") || "";
-          let xprime = false;
+          let bcine = false;
           try {
-            xprime = /(^|\.)xprime\.su$/i.test(new URL(hint).hostname);
+            bcine = /(^|\.)bcine\.app$/i.test(new URL(hint).hostname);
           } catch {
-            xprime = /xprime\.su/i.test(hint);
+            bcine = /bcine\.app/i.test(hint);
           }
-          const dyn = localStorage.getItem("dy") === "true" || xprime;
+          const dyn = localStorage.getItem("dy") === "true" || bcine;
           newSrc = `${window.location.origin}/${dyn ? "a/q" : "a"}/${goUrl}`;
         }
       }
@@ -178,13 +178,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           newIframe.contentWindow.open = url => {
             const u = typeof url === "string" ? url : "";
             const enc = __uv$config.encodeUrl(u);
-            let xprime = false;
+            let bcine = false;
             try {
-              xprime = /(^|\.)xprime\.su$/i.test(new URL(u).hostname);
+              bcine = /(^|\.)bcine\.app$/i.test(new URL(u).hostname);
             } catch {
-              xprime = /xprime\.su/i.test(u);
+              bcine = /bcine\.app/i.test(u);
             }
-            const dyn = localStorage.getItem("dy") === "true" || xprime;
+            const dyn = localStorage.getItem("dy") === "true" || bcine;
             sessionStorage.setItem("URL", `${dyn ? "/a/q/" : "/a/"}${enc}`);
             if (u) {
               sessionStorage.setItem("GoUrlHint", u);
