@@ -1,7 +1,8 @@
 // cloak.js
 let appInd;
-const g = window.location.pathname === "/a";
-const a = window.location.pathname === "/b";
+const pathnameBase = window.location.pathname.replace(/\/$/, "") || "/";
+const g = pathnameBase === "/a" || pathnameBase === "/play.html";
+const a = pathnameBase === "/b";
 const c = window.location.pathname === "/gt";
 
 let t;
@@ -239,7 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let path = "/assets/json/a.min.json";
 if (g) {
-  path = "/assets/json/g.min.json";
+  path = "/assets/json/g.min.json?v=ugs";
 } else if (c) {
   path = "/assets/json/t.min.json";
 } else if (a) {
